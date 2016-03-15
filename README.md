@@ -41,7 +41,7 @@ simple constructor web site via widgets
 ![Страница и log запрашиваемых виджетов](https://s3.amazonaws.com/idheap/ss/localhost8080page_2016-03-15_16-55-59.png)
 
 Ниже пример редактирования виджетов 
-![Процесс редактирования](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-15_17-15-12.gif)
+![Процесс редактирования](full_example.gif)
 
 * задается контент страницы /page (спец URL /@pages:edit/page
 * задается значение виджета /brand (спец URL /@widgets:edit/brand)
