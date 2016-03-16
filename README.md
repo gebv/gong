@@ -43,6 +43,8 @@ simple constructor web site via widgets
 Ниже пример редактирования виджетов 
 ![Процесс редактирования](full_example.gif)
 
+[Оригинальная gif-демо](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-15_16-59-01.gif)
+
 * задается контент страницы /page (спец URL /@pages:edit/page
 * задается значение виджета /brand (спец URL /@widgets:edit/brand)
 * редактируется значение виджета /navbar (спец URL /@widgets:edit/navbar) - добавляется кнопка редактирования страницы
