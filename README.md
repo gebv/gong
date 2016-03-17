@@ -3,7 +3,7 @@
 simple constructor web site via widgets
 
 Конструктор веб-сайта с синтаксисом markdown и структурой схожей с wiki.
-Особенностью является возможность оперировать блоками с динамическим контентом - виджеты.
+Особенностью является возможность апперировать блоками с динамическим контентом - виджеты.
 
 Страница имеет уникальный URL. На странице размещены виджеты
 Вместа конструкции ```{{widget . "/foobar"}}``` отображается значение виджета с ключем "/foobar"
@@ -19,11 +19,11 @@ simple constructor web site via widgets
         <link rel="stylesheet" href="//cdnjs.cloudflare.com/ajax/libs/uikit/2.25.0/css/uikit.almost-flat.min.css">
 	</head>
     <body class="uk-position-relative">
-        {{ widget . "/top" }}
+        {{ widget . "top" }}
         <nav class="uk-navbar uk-navbar">
-            <a href="/" class="uk-navbar-brand">{{widget . "/brand" }}</a>
+            <a href="/" class="uk-navbar-brand">{{widget . "brand" }}</a>
             <ul class="uk-navbar-nav">
-                {{ widget . "/navbar" }}
+                {{ widget . "navbar" }}
             </ul>
             <div class="uk-navbar-flip">
                 <ul class="uk-navbar-nav">
@@ -32,7 +32,7 @@ simple constructor web site via widgets
         </nav>
 	    {{ .V.Content }}
         <footer>
-        {{ widget . "/footer" }}
+        {{ widget . "footer" }}
         </footer>
 	</body>
 </html>
@@ -41,10 +41,14 @@ simple constructor web site via widgets
 ![Страница и log запрашиваемых виджетов](https://s3.amazonaws.com/idheap/ss/localhost8080page_2016-03-15_16-55-59.png)
 
 Ниже пример редактирования виджетов 
-![Процесс редактирования](full_example.gif)
-
-[Оригинальная gif-демо](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-15_16-59-01.gif)
+![Процесс редактирования](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-15_16-59-01.gif)
 
 * задается контент страницы /page (спец URL /@pages:edit/page
 * задается значение виджета /brand (спец URL /@widgets:edit/brand)
 * редактируется значение виджета /navbar (спец URL /@widgets:edit/navbar) - добавляется кнопка редактирования страницы
+
+
+# TODO
+
+* виджет состоит из TOML настроек и RAW содержимого. Содержимое может быть как html, js, css, etc
+* TOML и RAW проходят предпроцессинг как golang template. Необходимо для подстановки динамических значений
