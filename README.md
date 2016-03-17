@@ -6,7 +6,11 @@ simple constructor web site via widgets
 Особенностью является возможность апперировать блоками с динамическим контентом - виджеты.
 
 Страница имеет уникальный URL. На странице размещены виджеты
-Вместа конструкции ```{{widget . "/foobar"}}``` отображается значение виджета с ключем "/foobar"
+Вместа конструкции ```{{widget . "foobar"}}``` отображается значение виджета с ключем "foobar"
+
+``` shell
+go run main.go -db=gong.db -bind=:8080 -stderrthreshold=INFO`
+```
 
 ``` html
 <!DOCTYPE html>
