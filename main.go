@@ -82,6 +82,7 @@ func ViewHandler(w http.ResponseWriter, r *http.Request) {
     ctx := NewContext(w, r);
     widgetName := widgetName(mux.Vars(r)["name"])
     ctx.V["Name"] = widgetName
+    ctx.V["ShowHelpLink"] = len(r.URL.Query().Get("editable")) > 0
 //    spaceName := mux.Vars(r)["space"]
     
     ctx.RenderWidget(w, widgetName)
@@ -324,7 +325,7 @@ func (p *Context) RenderWidget(writer io.Writer, name string) error {
         
         template.Must(tmpl, err).Execute(contentBuff, p)
         
-        p.V["Content"] = contentBuff.String() 
+        p.V["Content"] = template.HTML(contentBuff.String()) 
         
         return p.RenderWidget(writer, layout) 
     }
@@ -382,7 +383,7 @@ render = "" # or markdown
 link_edit = "/@widgets:edit/{{.V.Name}}" # example dynamic parameter
 link_title = "edit"
 `
-const defaultRaw = `<a href="{{.Self.link_edit}}">{{.Self.link_title}}</a>`
+const defaultRaw = `{{if .V.ShowHelpLink}}<a href="{{.Self.link_edit}}" title="{{.V.Name}}">edit</a>{{end}}`
 
 const editTpl = `<!DOCTYPE html>
 <title>{{.V.Title}}</title>
