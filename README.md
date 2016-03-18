@@ -5,12 +5,57 @@ simple constructor web site via widgets
 Конструктор веб-сайта с синтаксисом markdown и структурой схожей с wiki.
 Особенностью является возможность апперировать блоками с динамическим контентом - виджеты.
 
-Страница имеет уникальный URL. На странице размещены виджеты
-Вместа конструкции ```{{widget . "foobar"}}``` отображается значение виджета с ключем "foobar"
+Вместа конструкции ```{{widget . "foobar"}}``` отображается значение виджета с ключем ```foobar```.
+Отредактировать виджет можно по ссылке ```/@widgets:edit/foobar``` где _foobar_ название виджета. 
+
+Страница это виджет. 
+Виджет содержит множество виджетов. 
+Виджет может быть обернут в layout. 
+Виджет будет представлен в layout-виджете в параметре ```{{ V.Content }}```
+
+Каждая страница дает возможность задать параметры (в [формате toml](https://github.com/toml-lang/toml#user-content-example)).
+
+## Редактирование виджета
+
+![Страница редактирования виджета](https://s3.amazonaws.com/idheap/ss/127.0.0.18080widgetseditdefault_2016-03-18_09-37-17.png)
+
+
+## Настройки виджета
+
+``` toml
+title = "page title" # if used layout
+
+[self]
+render = "" # or markdown
+# if the render=markdown in the widget data should not have dynamic parameters
+
+# layout = "" # current widget will be in the .V.Content variable
+link_edit = "/@widgets:edit/{{.V.Name}}" # example dynamic parameter
+link_title = "edit"
+```
+
+## RUN
 
 ``` shell
-go run main.go -db=gong.db -bind=:8080 -stderrthreshold=INFO`
+go run main.go -db=gong.db -bind=:8080 -stderrthreshold=INFO
 ```
+
+## Примеры
+
+### Cоздание страницы
+ 
+![Процесс редактирования](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-18_09-26-21.gif)
+
+* Переход по ссылке /
+* Включив параметр editable=1 отображаем вспомогательные ссылки (для быстрого перехода на страницу редактирования виджета)
+* Задаем значение виджета страницы /
+* Определяем тип содрежимого виджета как markdown (prerender=md)
+* Задаем layout в настройках страницы (layout=default)
+* Указанный layout отображается в связанных виджетах. Переходим к редактированию виджета _default_
+* Указали layout. Просматриваем полученную страницу
+* Задаем значение виджета _brand_
+
+### layout 
 
 ``` html
 <!DOCTYPE html>
@@ -41,18 +86,3 @@ go run main.go -db=gong.db -bind=:8080 -stderrthreshold=INFO`
 	</body>
 </html>
 ```
-
-![Страница и log запрашиваемых виджетов](https://s3.amazonaws.com/idheap/ss/localhost8080page_2016-03-15_16-55-59.png)
-
-Ниже пример редактирования виджетов 
-![Процесс редактирования](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-15_16-59-01.gif)
-
-* задается контент страницы /page (спец URL /@pages:edit/page
-* задается значение виджета /brand (спец URL /@widgets:edit/brand)
-* редактируется значение виджета /navbar (спец URL /@widgets:edit/navbar) - добавляется кнопка редактирования страницы
-
-
-# TODO
-
-* виджет состоит из TOML настроек и RAW содержимого. Содержимое может быть как html, js, css, etc
-* TOML и RAW проходят предпроцессинг как golang template. Необходимо для подстановки динамических значений
