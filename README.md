@@ -19,7 +19,9 @@ constructor web site via widgets
 
 ## Редактирование виджета
 
-![Страница редактирования виджета](https://s3.amazonaws.com/idheap/ss/192.168.1.368081settingsclassifers_2016-04-02_22-00-22.png)
+![Страница редактирования коллекции виджетов](https://s3.amazonaws.com/idheap/ss/192.168.1.368081settingsclassifers_2016-04-02_22-00-22.png)
+
+![Страница радктирования виджета](https://s3.amazonaws.com/idheap/ss/192.168.1.368081settingsclassifersbc3f1a64-f8c1-11e5-9cf5-10ddb19b9d24itemseditspecial_id2Fwiki_2016-04-02_22-02-25.png)
 
 
 ## Настройки виджета
@@ -45,17 +47,6 @@ go run main.go -db=gong.db -bind=:8080 -stderrthreshold=INFO
 ## Примеры
 
 ### Cоздание страницы
- 
-![Процесс редактирования](https://s3.amazonaws.com/idheap/ss/screencast_2016-03-18_09-26-21.gif)
-
-* Переход по ссылке /
-* Включив параметр editable=1 отображаем вспомогательные ссылки (для быстрого перехода на страницу редактирования виджета)
-* Задаем значение виджета страницы /
-* Определяем тип содрежимого виджета как markdown (render=md)
-* Задаем layout в настройках страницы (layout=default)
-* Указанный layout отображается в связанных виджетах. Переходим к редактированию виджета _default_
-* Указали layout. Просматриваем полученную страницу
-* Задаем значение виджета _brand_
 
 ### layout 
 
