@@ -1,2 +1,7 @@
-*.db
-*.old
+/src/server/settings-app/node_modules
+/src/server/settings-app/node_modules/*
+*.bleve
+*.bolt
+*.toml
+.vscode
+pkg
