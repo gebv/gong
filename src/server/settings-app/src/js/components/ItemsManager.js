@@ -7,7 +7,7 @@ var _ = require("lodash");
 var ace = require('brace');
 require('brace/mode/toml');
 require('brace/mode/html');
-require('brace/theme/monokai');
+// require('brace/theme/monokai');
 
 var SearchFilter = {
     controller: function(c) {
@@ -38,6 +38,87 @@ var SearchFilter = {
     }
 }
 
+var mapViews = {
+    "classifers": {
+        controller: function(c) {
+            var api = {
+                onEdit: function(mode_name) {
+                    return function(e) {
+                        e.preventDefault();
+
+                        c.mode(mode_name);
+
+                        return false;
+                    }
+                }
+            }
+
+            api = _.extend({}, api, c);
+
+            return api;
+        },
+        view: function(c, args) {
+            var url = "/@settings/classifers/" + args.data.ItemId + "/items";
+            var isShowSubPositions = c.resource_name == ItemActions.CLASSIFERS;
+            var buttonPositions = <a class="uk-button uk-button-primary" href={url} config={m.route}>Позиции</a>
+
+            return <div class="uk-panel uk-panel-box">
+                <div class="uk-panel-badge uk-text-small uk-text-muted">{args.data.ExtId}</div>
+                <p class="uk-panel-title"><a onclick={c.onEdit("edit") } class="uk-text-success uk-icon-edit" href=""></a> {args.data.Title}</p>
+                <p class="uk-article-meta">{args.data.Category} {args.data.Tags}</p>
+                <div>
+                    {isShowSubPositions ? buttonPositions : ""}
+                </div>
+            </div>
+        }
+    },
+    "items": {
+        controller: function(c) {
+            var api = {
+                onEdit: function(mode_name) {
+                    return function(e) {
+                        e.preventDefault();
+
+                        c.mode(mode_name);
+
+                        return false;
+                    }
+                }
+            }
+
+            api = _.extend({}, api, c);
+
+            return api;
+        },
+        view: function(c, args) {
+            var url = "/@settings/classifers/" + args.data.ItemId + "/items";
+            var isShowSubPositions = c.resource_name == ItemActions.CLASSIFERS;
+            var buttonPositions = <a class="uk-button uk-button-primary" href={url} config={m.route}>Позиции</a>
+
+            var listRefWidgets = [];
+
+            if (args.data.Props._BuildTraceWidgets) {
+                for (var i = 0; i < args.data.Props._BuildTraceWidgets.length; i += 2) {
+                    var url = "/@settings/classifers/"+args.data.Props._BuildTraceWidgets[i]+"/items/edit?special_id="+args.data.Props._BuildTraceWidgets[i+1];
+                    var label = [args.data.Props._BuildTraceWidgets[i], args.data.Props._BuildTraceWidgets[i + 1]].join(" ");
+                    listRefWidgets.push(m("li", m("a", {href: url, config: m.route}, label)))
+                }
+            }
+
+            return <div class="uk-panel uk-panel-box">
+                <div class="uk-panel-badge uk-text-small uk-text-muted">{args.data.ExtId}</div>
+                <p class="uk-panel-title"><a onclick={c.onEdit("edit") } class="uk-text-success uk-icon-edit" href=""></a> {args.data.Title}</p>
+                <p class="uk-article-meta">{args.data.Category} {args.data.Tags}</p>
+                <div>
+                    {isShowSubPositions ? buttonPositions : ""}
+                </div>
+                <p>related widgets:</p>
+                <ul class="uk-list">{listRefWidgets}</ul>
+            </div>
+        }
+    }
+}
+
 var mapEditor = {
     "classifers": {
         controller: function(c) {
@@ -56,7 +137,7 @@ var mapEditor = {
                 onDelete: function() {
                     return function(e) {
                         e.preventDefault();
-                        
+
                         if (!confirm("Вы уверены в удалении?")) {
                             return false;
                         }
@@ -122,9 +203,9 @@ var mapEditor = {
                     </div>
 
                     <div class="uk-form-row">
-                         <button class="uk-button" onclick={c.onCancel() }>Отменить</button>
+                        <button class="uk-button" onclick={c.onCancel() }>Отменить</button>
                         <button class="uk-button uk-button-success">Сохранить</button>
-                        
+
                         <a onclick={c.onDelete() } class="uk-button uk-float-right uk-button-danger"  href="">Удалить</a>
                     </div>
                 </form>
@@ -141,21 +222,21 @@ var mapEditor = {
                     return function(e) {
                         var editor = ace.edit([c.data.ItemId, c.data._TempId, "config"].join(""));
                         editor.getSession().setMode('ace/mode/toml');
-                        editor.setTheme('ace/theme/monokai');
+                        // editor.setTheme('ace/theme/monokai');
                         editor.setValue(value());
-                        editor.getSession().on('change', function(){
+                        editor.getSession().on('change', function() {
                             value(editor.getSession().getValue());
                         });
                     }
                 },
-                
+
                 InitContentEditor: function(value) {
                     return function(e) {
                         var editor = ace.edit([c.data.ItemId, c.data._TempId, "content"].join(""));
                         editor.getSession().setMode('ace/mode/html');
-                        editor.setTheme('ace/theme/monokai');
+                        // editor.setTheme('ace/theme/monokai');
                         editor.setValue(value());
-                        editor.getSession().on('change', function(){
+                        editor.getSession().on('change', function() {
                             value(editor.getSession().getValue());
                         });
                     }
@@ -168,14 +249,14 @@ var mapEditor = {
                 ExtId: m.prop(c.data.ExtId || ""),
                 Title: m.prop(c.data.Title || ""),
                 Props: m.prop(c.data.Props || {}),
-                
-                Config: m.prop(c.data.Props && c.data.Props.Config? c.data.Props.Config: ""),
-                Content: m.prop(c.data.Props && c.data.Props.Content? c.data.Props.Content: ""),
+
+                Config: m.prop(c.data.Props && c.data.Props.Config ? c.data.Props.Config : ""),
+                Content: m.prop(c.data.Props && c.data.Props.Content ? c.data.Props.Content : ""),
 
                 onDelete: function() {
                     return function(e) {
                         e.preventDefault();
-                        
+
                         if (!confirm("Вы уверены в удалении?")) {
                             return false;
                         }
@@ -202,7 +283,7 @@ var mapEditor = {
                         var data = {
                             ExtId: this.ExtId(),
                             Title: this.Title(),
-                            Props: {Config: this.Config(), Content: this.Content()},
+                            Props: { Config: this.Config(), Content: this.Content() },
                         };
 
                         c.mode("view");
@@ -240,27 +321,27 @@ var mapEditor = {
                             <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.ExtId) } value={c.ExtId() }/>
                         </div>
                     </div>
-                    
+
                     <div class="uk-form-row">
                         <label class="uk-form-label">Config</label>
-                        
+
                         <div class="uk-form-controls">
-                            <div id={[c.data.ItemId, c.data._TempId, "config"].join("")} config={c.InitConfigEditor(c.Config)}  style="height:200px;"></div>
+                            <div id={[c.data.ItemId, c.data._TempId, "config"].join("") } config={c.InitConfigEditor(c.Config) }  style="height:200px;"></div>
                         </div>
                     </div>
-                    
+
                     <div class="uk-form-row">
                         <label class="uk-form-label">Content</label>
-                        
+
                         <div class="uk-form-controls">
-                            <div id={[c.data.ItemId, c.data._TempId, "content"].join("")} config={c.InitContentEditor(c.Content)} style="height:200px;"></div>
+                            <div id={[c.data.ItemId, c.data._TempId, "content"].join("") } config={c.InitContentEditor(c.Content) } style="height:200px;"></div>
                         </div>
                     </div>
 
                     <div class="uk-form-row">
                         <button class="uk-button" onclick={c.onCancel() }>Отменить</button>
                         <button class="uk-button uk-button-success">Сохранить</button>
-                        
+
                         <a onclick={c.onDelete() } class="uk-button uk-float-right uk-button-danger"  href="">Удалить</a>
                     </div>
                 </form>
@@ -322,7 +403,7 @@ var ListItems = {
 
 var ItemList = {
     controller: function(c) {
-        
+
         var api = {
             resource_name: c.resource_name,
             mode: m.prop("view"),
@@ -335,172 +416,23 @@ var ItemList = {
         if (args.data._TempId) {
             c.mode("edit");
         }
+        
+        var special_id = m.route.param("special_id");
+        
+        if (special_id && (special_id == args.data.ItemId || special_id == args.data.ExtId)) {
+            c.mode("edit");
+        }
 
         switch (c.mode()) {
             case "edit":
                 return m.component(mapEditor[c.resource_name], _.extend({}, args, { mode: c.mode, classifer_id: args.classifer_id }));
             case "view":
-                return m.component(ItemView, _.extend({}, args, { mode: c.mode, classifer_id: args.classifer_id }));
+                return m.component(mapViews[c.resource_name], _.extend({}, args, { mode: c.mode, classifer_id: args.classifer_id }));
             default:
                 return m("li", args.data.ItemId)
         }
     }
 }
-
-var ItemView = {
-    controller: function(c) {
-        var api = {
-            onEdit: function(mode_name) {
-                return function(e) {
-                    e.preventDefault();
-
-                    c.mode(mode_name);
-
-                    return false;
-                }
-            }
-        }
-
-        api = _.extend({}, api, c);
-
-        return api;
-    },
-    view: function(c, args) {
-        var url = "/@settings/classifers/" + args.data.ItemId + "/items";
-        var isShowSubPositions = c.resource_name == ItemActions.CLASSIFERS;
-        var buttonPositions = <a class="uk-button uk-button-primary" href={url} config={m.route}>Позиции</a>
-
-        return <div class="uk-panel uk-panel-box">
-            <div class="uk-panel-badge uk-text-small uk-text-muted">{args.data.ExtId}</div>
-            <p class="uk-panel-title"><a onclick={c.onEdit("edit") } class="uk-text-success uk-icon-edit" href=""></a> {args.data.Title}</p>
-            <p class="uk-article-meta">{args.data.Category} {args.data.Tags}</p>
-            <div>
-                {isShowSubPositions?buttonPositions:""}
-            </div>
-        </div>
-    }
-}
-
-// var ItemEdit = {
-//     controller: function(c) {
-
-//         // TODO: Что бы знаения обновились, переключать режим
-
-//         console.log(c);
-
-//         var api = {
-//             resource_name: c.resource_name,
-//             classifer_id: c.classifer_id,
-
-//             _TempId: m.prop(c.data._TempId || ""), 
-//             ItemId: m.prop(c.data.ItemId || ""),
-//             ExtId: m.prop(c.data.ExtId || ""),
-//             Articul: m.prop(c.data.Articul || ""),
-//             Categories: m.prop(c.data.Categories || []),
-//             Title: m.prop(c.data.Title || ""),
-//             // Tags: m.prop(c.data.Tags || []),
-//             Props: m.prop(c.data.Props || {}),
-
-//             onDelete: function() {
-//                 return function(e) {
-//                     e.preventDefault();
-
-//                     if (this._TempId()) {
-//                         ItemActions.DeleteTemp(store.dispatch, {_TempId: this._TempId(), id: this.ItemId(), resource_name: this.resource_name});    
-//                     } else {
-//                         ItemActions.Delete(store.dispatch, {id: this.ItemId(), resource_name: this.resource_name});
-//                     }
-
-//                     return false;
-//                 }.bind(this);
-//             },
-//             onCancel: function() {
-//                 return function(e) {
-//                     c.mode("view");
-//                     return false
-//                 }
-//             },
-//             onCreate: function() {
-//                 return function(e) {
-//                     e.preventDefault();
-
-//                     var data = {
-//                         ExtId: this.ExtId(),
-//                         Articul: this.Articul(),
-//                         Categories: this.Categories(),
-//                         Title: this.Title(),
-//                         // Tags: _.map(this.Tags().split(","), _.trim),
-//                     };
-
-//                     c.mode("view");
-
-//                     if (this._TempId()) {
-//                         ItemActions.Create(store.dispatch, {_TempId: this._TempId(), data: data, resource_name: this.resource_name, classifer_id: this.classifer_id});    
-//                     } else {
-//                         ItemActions.Update(store.dispatch, {id: this.ItemId(), data: data, resource_name: this.resource_name});
-//                     }
-
-
-//                     return false;
-//                 }.bind(this);
-//             }
-//         }
-
-//         api = _.extend({}, api, c);
-
-//         return api;
-//     },
-//     view: function(c, args) {
-
-//         /*
-//         <div class="uk-form-row">
-//                     <label class="uk-form-label">Tags</label>
-//                     <div class="uk-form-controls">
-//                         <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.Tags) } value={c.Tags() }/>
-//                     </div>
-//                 </div>
-//         */
-
-//         return <div class="uk-panel uk-panel-box">
-//             <form class="uk-form uk-form-horizontal" onsubmit={c.onCreate() }>
-//                  <div class="uk-form-row">
-//                     <label class="uk-form-label">Title</label>
-//                     <div class="uk-form-controls">
-//                         <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.Title) } value={c.Title() }/>
-//                     </div>
-//                 </div>
-
-//                 <div class="uk-form-row">
-//                     <label class="uk-form-label">ExtId</label>
-//                     <div class="uk-form-controls">
-//                         <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.ExtId) } value={c.ExtId() }/>
-//                     </div>
-//                 </div>
-
-//                 <div class="uk-form-row">
-//                     <label class="uk-form-label">Articul</label>
-//                     <div class="uk-form-controls">
-//                         <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.Articul) } value={c.Articul() }/>
-//                     </div>
-//                 </div>
-
-//                 <div class="uk-form-row">
-//                     <label class="uk-form-label">Categories</label>
-//                     <div class="uk-form-controls">
-//                         <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.Categories) } value={c.Categories() }/>
-//                     </div>
-//                 </div>
-
-//                 <div class="uk-form-row">
-//                     <button class="uk-button" onclick={c.onCancel() }>Отменить</button>
-//                     <button class="uk-button">Сохранить</button>
-
-//                     <button class="uk-button uk-float-right" onclick={c.onDelete()}>Удалить</button>
-//                 </div>
-//             </form>
-//         </div> 
-//     } 
-// }
 
 var Manager = {
     controller: function(c) {

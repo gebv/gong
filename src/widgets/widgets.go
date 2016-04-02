@@ -1,4 +1,4 @@
-package server
+package widgets
 
 import (
     "github.com/shurcooL/github_flavored_markdown"
@@ -102,6 +102,8 @@ func NewContext() *Context {
     return model
 }
 
+// TODO: Добавить Request и Response для реализации возможности создавать обработчик запросов в виджете
+
 type Context struct {
     V map[string]interface{}
     Self Config
@@ -114,7 +116,7 @@ type Context struct {
 }
 
 func (p *Context) RenderWidget(writer io.Writer, group, name string) error {
-    p.TraceWidgets = append(p.TraceWidgets, name)
+    p.TraceWidgets = append(p.TraceWidgets, group, name)
     
     if p.depth > CountWidgetPerPage {
         return fmt.Errorf("more widgets per page (for example 'layout' is looped, clear 'layout')")

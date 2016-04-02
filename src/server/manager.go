@@ -6,6 +6,8 @@ import (
     "net/http"
     "store"
     "strings"
+    "widgets"
+    "bytes"
 )
 
 type ResponseError struct {
@@ -23,6 +25,17 @@ func searchItem() echo.HandlerFunc {
         }
         
         items, err := store.ItemSearchQuery(query, classifer_id)
+        
+        // TODO: тестовую генерацию вынести на уровень выше вынести на уровень ниже
+        
+        for _, widget := range items {
+            ctx := widgets.NewContext()
+            if err := ctx.RenderWidget(bytes.NewBufferString(""), classifer_id, widget.ExtId); err != nil {
+                 widget.Props["_BuildError"] = err.Error()
+            }
+            
+            widget.Props["_BuildTraceWidgets"] = ctx.TraceWidgets
+        }
         
         if err != nil {
             return err

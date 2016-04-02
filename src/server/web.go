@@ -5,12 +5,13 @@ import (
     // "net/http"
     "html/template"
     // "store"
+    "widgets"
 )
 
 func SettingsEntryPoint() echo.HandlerFunc {
 	return func(c echo.Context) error {
         
-        templateString, err := settingsApp.String("index.tmpl")
+        templateString, err := settingsApp.String("index.html")
         
         if err != nil {
             
@@ -29,7 +30,7 @@ func WebAppEntryPoint() echo.HandlerFunc {
         var ClassiferExtId = "pages"
         var ExtId = c.Request().URL().Path()
         
-        context := NewContext()
+        context := widgets.NewContext()
         
         return context.RenderWidget(c.Response().Writer(), ClassiferExtId, ExtId);
 	}

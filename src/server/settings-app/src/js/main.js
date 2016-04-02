@@ -45,4 +45,5 @@ m.route(document.body, "/@settings/", {
     "/@settings/": m.component(Layout, {content: Dashboard, config: {}}),
     "/@settings/:resource_name": m.component(Layout, {content: ItemsManager.Manager, config: {resource_name: Items.CLASSIFERS}}),
     "/@settings/classifers/:classifer_id/:resource_name": m.component(Layout, {content: ItemsManager.Manager, config: {resource_name: Items.ITEMS}}),
+    "/@settings/classifers/:classifer_id/:resource_name/edit": m.component(Layout, {content: ItemsManager.Manager, config: {resource_name: Items.ITEMS}}),
 })
