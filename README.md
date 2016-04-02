@@ -19,7 +19,7 @@ constructor web site via widgets
 
 ## Редактирование виджета
 
-![Страница редактирования виджета](https://s3.amazonaws.com/idheap/ss/127.0.0.18080widgetseditdefault_2016-03-18_09-37-17.png)
+![Страница редактирования виджета](https://s3.amazonaws.com/idheap/ss/192.168.1.368081settingsclassifers_2016-04-02_22-00-22.png)
 
 
 ## Настройки виджета
