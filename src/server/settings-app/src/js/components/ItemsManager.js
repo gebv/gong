@@ -104,7 +104,7 @@ var mapViews = {
                     listRefWidgets.push(m("li", m("a", {href: url, config: m.route}, label)))
                 }
             }
-
+            
             return <div class="uk-panel uk-panel-box">
                 <div class="uk-panel-badge uk-text-small uk-text-muted">{args.data.ExtId}</div>
                 <p class="uk-panel-title"><a onclick={c.onEdit("edit") } class="uk-text-success uk-icon-edit" href=""></a> {args.data.Title}</p>

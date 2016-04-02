@@ -159,7 +159,7 @@ func (p *Context) RenderWidget(writer io.Writer, group, name string) error {
     delete(p.V, "self")   
     
     widgetBuff := bytes.NewBufferString("")
-    _contentRaw, ok := widget.Props["Config"]
+    _contentRaw, ok := widget.Props["Content"]
     contentRaw := ""
     
     if ok {
@@ -171,7 +171,7 @@ func (p *Context) RenderWidget(writer io.Writer, group, name string) error {
             widgetBuff.Write(github_flavored_markdown.Markdown([]byte(contentRaw)))
 //            widgetBuff.Write(blackfriday.MarkdownCommon([]byte(widget.Raw)))
         default:
-            widgetBuff.WriteString(widget.Props["Content"].(string))
+            widgetBuff.WriteString(contentRaw)
     }
     
     if layout := p.Self.GetAsString("layout"); len(layout) > 0 {
