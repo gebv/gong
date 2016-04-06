@@ -99,7 +99,7 @@ var mapViews = {
 
             if (args.data.Props._BuildTraceWidgets) {
                 for (var i = 0; i < args.data.Props._BuildTraceWidgets.length; i += 2) {
-                    var url = "/@settings/classifers/"+args.data.Props._BuildTraceWidgets[i]+"/items/edit?special_id="+args.data.Props._BuildTraceWidgets[i+1];
+                    var url = "/@settings/classifers/"+args.data.Props._BuildTraceWidgets[i]+"/"+args.resource_name+"/edit?special_id="+args.data.Props._BuildTraceWidgets[i+1];
                     var label = [args.data.Props._BuildTraceWidgets[i], args.data.Props._BuildTraceWidgets[i + 1]].join(" ");
                     listRefWidgets.push(m("li", m("a", {href: url, config: m.route}, label)))
                 }
@@ -243,6 +243,7 @@ var mapEditor = {
                 },
                 resource_name: c.resource_name,
                 classifer_id: c.classifer_id,
+                classiferUrl: "/@settings/classifers/"+c.classifer_id+"/"+c.resource_name,
 
                 _TempId: m.prop(c.data._TempId || ""),
                 ItemId: m.prop(c.data.ItemId || ""),
@@ -273,8 +274,9 @@ var mapEditor = {
                 onCancel: function() {
                     return function(e) {
                         c.mode("view");
+                        m.route(this.classiferUrl);
                         return false
-                    }
+                    }.bind(this);
                 },
                 onCreate: function() {
                     return function(e) {
@@ -287,6 +289,7 @@ var mapEditor = {
                         };
 
                         c.mode("view");
+                        m.route(this.classiferUrl);
 
                         if (this._TempId()) {
                             ItemActions.Create(store.dispatch, { _TempId: this._TempId(), data: data, resource_name: this.resource_name, classifer_id: this.classifer_id });

@@ -29,6 +29,12 @@ type Classifer struct {
     UpdatedAt time.Time
 }
 
+
+func (*Classifer) Type() string {
+    return "Classifer"
+}
+
+
 // BeforeCreated перед созданием заполняем поля по умолчанию
 func (d *Classifer) BeforeCreated() {
     d.CreatedAt = time.Now()

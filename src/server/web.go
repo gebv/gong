@@ -2,6 +2,7 @@ package server
 
 import (
     "github.com/labstack/echo"
+    "github.com/golang/glog"
     // "net/http"
     "html/template"
     // "store"
@@ -27,11 +28,15 @@ func SettingsEntryPoint() echo.HandlerFunc {
 
 func WebAppEntryPoint() echo.HandlerFunc {
 	return func(c echo.Context) error {
-        var ClassiferExtId = "pages"
-        var ExtId = c.Request().URL().Path()
+        var key = c.Request().URL().Path()
         
-        context := widgets.NewContext()
+        context := widgets.NewContext(c)
         
-        return context.RenderWidget(c.Response().Writer(), ClassiferExtId, ExtId);
+        if err := context.Execute(c.Response().Writer(), key); err != nil {
+            glog.Errorf("WebAppEntryPoint: key=%v, err=%v", key, err)
+            return err
+        }
+        
+        return nil
 	}
 }

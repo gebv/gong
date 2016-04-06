@@ -29,7 +29,7 @@ func searchItem() echo.HandlerFunc {
         // TODO: тестовую генерацию вынести на уровень выше вынести на уровень ниже
         
         for _, widget := range items {
-            ctx := widgets.NewContext()
+            ctx := widgets.NewContext(c)
             if err := ctx.RenderWidget(bytes.NewBufferString(""), classifer_id, widget.ExtId); err != nil {
                  widget.Props["_BuildError"] = err.Error()
             }

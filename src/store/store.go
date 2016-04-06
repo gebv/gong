@@ -54,31 +54,50 @@ func InitStore() error {
         return err
     })
      
-    if Search, err = bleve.Open(dbSearch); err != nil {
-    //    itemMapping := bleve.NewDocumentMapping()
+    if Search, err = bleve.Open(dbSearch); err != nil {        
+        notAnalizedField := bleve.NewTextFieldMapping()
+        notAnalizedField.Analyzer = "keyword"
         
-    //     // fieldMapping := bleve.NewTextFieldMapping()
-    //     // fieldMapping.Analyzer = "simple"
+        defaultMappinfField := bleve.NewTextFieldMapping();
+        defaultMappinfField.Analyzer = "standard"
         
-    //     storeFieldOnlyMapping := bleve.NewTextFieldMapping()
-    //     storeFieldOnlyMapping.Analyzer = "simple"
-    //     storeFieldOnlyMapping.Index = false
-    //     storeFieldOnlyMapping.IncludeTermVectors = false
-    //     storeFieldOnlyMapping.IncludeInAll = false
+        itemMapping := bleve.NewDocumentMapping()
+        itemMapping.AddFieldMappingsAt("ItemId", notAnalizedField)
+        itemMapping.AddFieldMappingsAt("ExtId", notAnalizedField)
+        itemMapping.AddFieldMappingsAt("Articul", notAnalizedField)
+        itemMapping.AddFieldMappingsAt("Title", defaultMappinfField)
         
-    //    itemMapping.AddFieldMappingsAt("ExtId", storeFieldOnlyMapping)
-    //    itemMapping.AddFieldMappingsAt("ItemId", storeFieldOnlyMapping)
-    //    itemMapping.AddFieldMappingsAt("Articul", storeFieldOnlyMapping)
-    //    itemMapping.AddFieldMappingsAt("Tags", storeFieldOnlyMapping)
-    //    itemMapping.AddFieldMappingsAt("Categories", storeFieldOnlyMapping)
-    //    itemMapping.AddFieldMappingsAt("Attributes", storeFieldOnlyMapping)
+        itemPropsMapping := bleve.NewDocumentMapping()
+        itemPropsMapping.DefaultAnalyzer = "keyword"
+        itemPropsMapping.AddFieldMappingsAt("Content", defaultMappinfField)
+        itemPropsMapping.AddFieldMappingsAt("Config", defaultMappinfField)
         
-       mapping := bleve.NewIndexMapping()
-    //    mapping.AddDocumentMapping("items", itemMapping)
-       
-       Search, err = bleve.New(dbSearch, mapping) 
-       
-       return err
+        itemMapping.AddFieldMappingsAt("Categories", notAnalizedField)
+        itemMapping.AddFieldMappingsAt("Attributes", notAnalizedField)
+        itemMapping.AddSubDocumentMapping("Props", itemPropsMapping) // Content and Config
+        itemMapping.AddFieldMappingsAt("Tags", notAnalizedField)
+        
+        itemMapping.AddFieldMappingsAt("IsRemoved", bleve.NewBooleanFieldMapping())
+        itemMapping.AddFieldMappingsAt("CreatedAt", bleve.NewDateTimeFieldMapping())
+        itemMapping.AddFieldMappingsAt("UpdatedAt", bleve.NewDateTimeFieldMapping())
+        
+        classiferMapping := bleve.NewDocumentMapping()
+        classiferMapping.AddFieldMappingsAt("ClassiferId", notAnalizedField)
+        classiferMapping.AddFieldMappingsAt("ExtId", notAnalizedField)
+        classiferMapping.AddFieldMappingsAt("Title", defaultMappinfField)
+        classiferMapping.AddFieldMappingsAt("Path", notAnalizedField)
+        classiferMapping.AddFieldMappingsAt("Tags", notAnalizedField)
+        classiferMapping.AddFieldMappingsAt("IsRemoved", bleve.NewBooleanFieldMapping())
+        classiferMapping.AddFieldMappingsAt("CreatedAt", bleve.NewDateTimeFieldMapping())
+        classiferMapping.AddFieldMappingsAt("UpdatedAt", bleve.NewDateTimeFieldMapping())
+
+        mapping := bleve.NewIndexMapping()
+        mapping.AddDocumentMapping("Item", itemMapping)
+        mapping.AddDocumentMapping("Classifer", classiferMapping)
+
+        Search, err = bleve.New(dbSearch, mapping) 
+
+        return err
     }
     
     return err

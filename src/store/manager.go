@@ -30,8 +30,9 @@ func GetByPath(group, key string) (*Item, error) {
         group = CLASSIFERS
     }
     
-    conjuncts = append(conjuncts, bleve.NewMatchPhraseQuery(group).SetField("Categories"))
-    conjuncts = append(conjuncts, bleve.NewMatchPhraseQuery(key).SetField("ExtId"))
+    
+    conjuncts = append(conjuncts, bleve.NewTermQuery(group).SetField("Categories"))
+    conjuncts = append(conjuncts, bleve.NewTermQuery(key).SetField("ExtId"))
     conjuncts = append(conjuncts, bleve.NewBoolFieldQuery(false).SetField("IsRemoved"))
     
     query := bleve.NewConjunctionQuery(conjuncts)
@@ -121,7 +122,7 @@ func CreateItem(dto *CreateItemDTO, groupname string) (*Item, error) {
             return err
         }
         
-        if err := Search.Index(model.ItemId.String(), *model); err != nil {
+        if err := Search.Index(model.ItemId.String(), model); err != nil {
             glog.Errorln("save search: ", err)
             
             return err
@@ -169,7 +170,7 @@ func UpdateItem(modelId string, dto *UpdateItemDTO, makeDelete bool) (*Item, err
             return err
         }
         
-        if err := Search.Index(model.ItemId.String(), *model); err != nil {
+        if err := Search.Index(model.ItemId.String(), model); err != nil {
             glog.Errorln("save search: ", err)
             
             return err
@@ -191,7 +192,7 @@ func ItemSearchQuery(queryString, classifer_id string) ([]*Item, error) {
     }
     
     // bleve.NewTermQuery
-    conjuncts = append(conjuncts, bleve.NewMatchPhraseQuery(classifer_id).SetField("Categories"))
+    conjuncts = append(conjuncts, bleve.NewTermQuery(classifer_id).SetField("Categories"))
     conjuncts = append(conjuncts, bleve.NewBoolFieldQuery(false).SetField("IsRemoved"))
     
     if len(queryString) != 0 {

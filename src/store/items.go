@@ -57,6 +57,10 @@ type Item struct {
     UpdatedAt time.Time
 }
 
+func (*Item) Type() string {
+    return "Item"
+}
+
 // BeforeCreated перед созданием заполняем поля по умолчанию
 func (d *Item) BeforeCreated() {
     d.CreatedAt = time.Now()
@@ -91,9 +95,8 @@ func (i *Item) TransformFrom(in interface{}) {
         case *UpdateItemDTO:
             dto := in.(*UpdateItemDTO)
             
-            // c.ExtId = dto.ExtId
+            i.ExtId = dto.ExtId
             i.Title = dto.Title
-            // c.Path = dto.Path
             i.Tags = dto.Tags
             i.Props = make(map[string]interface{})
             
