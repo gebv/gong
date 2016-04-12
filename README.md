@@ -1,5 +1,7 @@
 # GONG
 
+[![Build Status](https://travis-ci.org/gebv/gong.svg?branch=master)](https://travis-ci.org/gebv/gong)
+
 !Пример ниже не соответствует обновленному интерфейсу взаимодействия с приложением
 
 constructor web site via widgets
