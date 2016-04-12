@@ -12,12 +12,12 @@ test_travis: build
 	GOPATH=${PWD}:${PWD}/vendor go test ./src/store/... -stderrthreshold=INFO
 	
 vendor_clean:
-	rm -dRf ./vendor
+	rm -Rf ./vendor
 	mkdir ./vendor
-	rm -dRf ./bin
+	rm -Rf ./bin
 	mkdir ./bin
 	# mkdir ./logs
-	rm -dRf ./pkg
+	rm -Rf ./pkg
 	
 vendor_get: vendor_clean
 	GOPATH=${PWD}/vendor go get -u -v \
