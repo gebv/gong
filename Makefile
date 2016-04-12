@@ -8,7 +8,11 @@ run: build
 test: build
 	GOPATH=${GOPATH}:${PWD} go test ./src/store/... -stderrthreshold=INFO
 	
-test_travis: build
+build_travis:
+	DICO_TEMPLATES=./templates/* ./vendor/bin/dico ./src *.go
+	gofmt -w ./src
+	GOPATH=${PWD}:${PWD}/vendor go build -o bin/gong src/main.go
+test_travis: build_travis
 	GOPATH=${PWD}:${PWD}/vendor go test ./src/store/... -stderrthreshold=INFO
 	
 vendor_clean:
@@ -28,8 +32,9 @@ vendor_get: vendor_clean
 		github.com/blevesearch/bleve \
 		github.com/boltdb/bolt \
 		github.com/satori/go.uuid \
-		github.com/GeertJohan/go.rice
-	
+		github.com/GeertJohan/go.rice \
+		github.com/gebv/dico
+ 	
 setup:
 	ln -s ../settings-app/index.html src/server/web-static/index.html
 	ln -s ../settings-app/dist/js src/server/web-static/js
