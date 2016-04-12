@@ -4,7 +4,7 @@ language: go
 go:
   - 1.6
 
-install: go get
+install: make vendor_get
 
 script:
-  - make test
+  - make test_travis
