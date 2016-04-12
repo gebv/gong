@@ -92,6 +92,7 @@ go run main.go -db=gong.db -bind=:8080 -stderrthreshold=INFO
 * изменить роутинг в настроке виджетов
 * возможность экспортировать\импортировать настройки
 * реализовать интерфейс для написания доп.компонентов\модулей
+* для модели реализовать функции для быстрой валидации данных [(Required, Length, Equals, Greater Than, Greater Than or Equal, Less Than, Less Than or Equal, Contains, etc)](https://godoc.org/gopkg.in/bluesuncorp/validator.v8)
 
 # Идеи
 

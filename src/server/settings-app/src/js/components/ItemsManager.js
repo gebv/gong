@@ -101,11 +101,12 @@ var mapViews = {
                 for (var i = 0; i < args.data.Props._BuildTraceWidgets.length; i += 2) {
                     var url = "/@settings/classifers/"+args.data.Props._BuildTraceWidgets[i]+"/"+args.resource_name+"/edit?special_id="+args.data.Props._BuildTraceWidgets[i+1];
                     var label = [args.data.Props._BuildTraceWidgets[i], args.data.Props._BuildTraceWidgets[i + 1]].join(" ");
+                    
                     listRefWidgets.push(m("li", m("a", {href: url, config: m.route}, label)))
                 }
             }
             
-            return <div class="uk-panel uk-panel-box">
+            return <div class="uk-panel uk-panel-box" id={args.data.ExtId}>
                 <div class="uk-panel-badge uk-text-small uk-text-muted">{args.data.ExtId}</div>
                 <p class="uk-panel-title"><a onclick={c.onEdit("edit") } class="uk-text-success uk-icon-edit" href=""></a> {args.data.Title}</p>
                 <p class="uk-article-meta">{args.data.Category} {args.data.Tags}</p>
@@ -133,6 +134,20 @@ var mapEditor = {
                 ItemId: m.prop(c.data.ItemId || ""),
                 ExtId: m.prop(c.data.ExtId || ""),
                 Title: m.prop(c.data.Title || ""),
+                
+                Config: m.prop(c.data.Props && c.data.Props.Config ? c.data.Props.Config : ""),
+                
+                InitConfigEditor: function(value) {
+                    return function(e) {
+                        var editor = ace.edit([c.data.ItemId, c.data._TempId, "config"].join(""));
+                        editor.getSession().setMode('ace/mode/toml');
+                        // editor.setTheme('ace/theme/monokai');
+                        editor.setValue(value());
+                        editor.getSession().on('change', function() {
+                            value(editor.getSession().getValue());
+                        });
+                    }
+                },
 
                 onDelete: function() {
                     return function(e) {
@@ -164,6 +179,8 @@ var mapEditor = {
                         var data = {
                             ExtId: this.ExtId(),
                             Title: this.Title(),
+                            
+                            Props: { Config: this.Config()},
                         };
 
                         c.mode("view");
@@ -196,9 +213,17 @@ var mapEditor = {
                     </div>
 
                     <div class="uk-form-row">
-                        <label class="uk-form-label">Name</label>
+                        <label class="uk-form-label">Key</label>
                         <div class="uk-form-controls">
                             <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.ExtId) } value={c.ExtId() }/>
+                        </div>
+                    </div>
+                    
+                    <div class="uk-form-row">
+                        <label class="uk-form-label">Config</label>
+
+                        <div class="uk-form-controls">
+                            <div id={[c.data.ItemId, c.data._TempId, "config"].join("") } config={c.InitConfigEditor(c.Config) }  style="height:200px;"></div>
                         </div>
                     </div>
 
@@ -309,7 +334,7 @@ var mapEditor = {
         },
         view: function(c, args) {
 
-            return <div class="uk-panel uk-panel-box">
+            return <div class="uk-panel uk-panel-box" id={args.data.ExtId}>
                 <form class="uk-form uk-form-horizontal" onsubmit={c.onCreate() }>
                     <div class="uk-form-row">
                         <label class="uk-form-label">Title</label>
@@ -319,7 +344,7 @@ var mapEditor = {
                     </div>
 
                     <div class="uk-form-row">
-                        <label class="uk-form-label">Name</label>
+                        <label class="uk-form-label">Key</label>
                         <div class="uk-form-controls">
                             <input type="text" placeholder="" class="uk-width-1-1" oninput={m.withAttr("value", c.ExtId) } value={c.ExtId() }/>
                         </div>
@@ -385,7 +410,13 @@ var SearchResult = {
 var ListItems = {
     controller: function(c) {
         var api = {
-
+            onLoadMore: function() {
+                return function(e) {
+                    e.preventDefault();
+                    
+                    return false;
+                }
+            }
         }
 
         return api;
@@ -396,6 +427,9 @@ var ListItems = {
 
             return m("li", { key: "" + item._TempId + item.ItemId }, itemList)
         });
+        
+         
+        items.push(m("li", m("a.uk-button uk-width-1-1", {onclick: c.onLoadMore()}, "more")))
 
         var waiting = store.getState().app.isWaitingRequest ? m("i.uk-icon-spinner uk-icon-spin") : false;
 
@@ -423,6 +457,7 @@ var ItemList = {
         var special_id = m.route.param("special_id");
         
         if (special_id && (special_id == args.data.ItemId || special_id == args.data.ExtId)) {
+            m.route("/@settings/classifers/"+args.classifer_id+"/items")
             c.mode("edit");
         }
 
