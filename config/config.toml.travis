@@ -1,0 +1,6 @@
+[api]
+bind = "192.168.1.36:8081"
+
+[storage]
+db_search = "gong.bleve"
+db_store = "gong.bolt"

@@ -14,7 +14,7 @@ func initConfigAndDataBase() {
 	os.Remove(".testdatabase.bolt")
 	os.RemoveAll(".testdatabase.bleve")
 
-	if err := utils.InitConfig("../../config/config.toml"); err != nil {
+	if err := utils.InitConfig("../../config/config.toml.travis"); err != nil {
 		glog.Fatal(err)
 		return
 	}
