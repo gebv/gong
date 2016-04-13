@@ -9,3 +9,5 @@ pkg
 /src/server/settings-app/dist/*
 /bin
 /bin/*
+/vendor
+/vendor/*
