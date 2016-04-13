@@ -1,15 +1,17 @@
 package store
 
 import "time"
-import "github.com/satori/go.uuid"
+
+// import "github.com/satori/go.uuid"
 
 const NameFileType = "File"
 
 func (i *File) IsNew() bool {
-	return uuid.Equal(uuid.Nil, i.Id)
+	// return uuid.Equal(uuid.Nil, i.Id)
+	return i.Id.IsNil()
 }
 
-func (i *File) Type() string {
+func (i File) Type() string {
 	return NameFileType
 }
 

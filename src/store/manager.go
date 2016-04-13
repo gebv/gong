@@ -7,7 +7,7 @@ import (
 	// "github.com/blevesearch/bleve"
 	"github.com/boltdb/bolt"
 	"github.com/golang/glog"
-	"github.com/satori/go.uuid"
+	// "github.com/satori/go.uuid"
 )
 
 //dico errors
@@ -82,9 +82,10 @@ func FindFile(bucketId, fileId string) (*File, error) {
 	if bucketId == CollNameBucket {
 		// Ищем bucket
 
-		bucketIdAsUUID := uuid.FromStringOrNil(fileId)
+		// bucketIdAsUUID := uuid.FromStringOrNil(fileId)
+		bucketIdAsUUID := NewIDFromString(fileId)
 
-		if !uuid.Equal(bucketIdAsUUID, uuid.Nil) {
+		if !bucketIdAsUUID.IsNil() {
 			// fileId является bucketId типа UUID
 			// Ищем bucket по прямой ссылке
 
@@ -102,14 +103,17 @@ func FindFile(bucketId, fileId string) (*File, error) {
 		var err error
 
 		// Если bucketId как UUID
-		bucketIdAsUUID := uuid.FromStringOrNil(bucketId)
+		// bucketIdAsUUID := uuid.FromStringOrNil(bucketId)
+		bucketIdAsUUID := NewIDFromString(bucketId)
 
-		if !uuid.Equal(bucketIdAsUUID, uuid.Nil) {
+		// if !uuid.Equal(bucketIdAsUUID, uuid.Nil) {
+		if !bucketIdAsUUID.IsNil() {
 			// bucketId как uuid
 
 			bucketFile, err = FindFileById(bucketIdAsUUID.String())
 
 			if err != nil {
+
 				if err == ErrNotFound {
 					return nil, ErrNotFound
 				}
@@ -126,18 +130,19 @@ func FindFile(bucketId, fileId string) (*File, error) {
 				glog.Errorf("manager: error find bucket by name=%v, err=%v", bucketId, err)
 				return nil, ErrUnknown
 			}
-
-			filter.SetExtId(fileId)
 		}
 
 		// Если fileId как UUID
-		fileIdAsUUID := uuid.FromStringOrNil(fileId)
+		// fileIdAsUUID := uuid.FromStringOrNil(fileId)
+		fileIdAsUUID := NewIDFromString(fileId)
 
-		if !uuid.Equal(fileIdAsUUID, uuid.Nil) {
+		// if !uuid.Equal(fileIdAsUUID, uuid.Nil) {
+		if !fileIdAsUUID.IsNil() {
 
 			return FindFileById(fileIdAsUUID.String())
 		}
 
+		filter.SetExtId(fileId)
 		filter.AddCollections(CollNameFile)
 		filter.AddCollections(bucketFile.Id.String())
 	}
@@ -148,7 +153,6 @@ func FindFile(bucketId, fileId string) (*File, error) {
 	searchRes := SearchPerPage(filter)
 
 	if len(searchRes.GetItems()) != 1 {
-
 		if len(searchRes.GetItems()) == 0 {
 			return nil, ErrNotFound
 		}
@@ -157,6 +161,8 @@ func FindFile(bucketId, fileId string) (*File, error) {
 
 		return nil, ErrUnknown
 	}
+
+	glog.V(2).Infof("find file search: filter=%v, res=%v", filter, searchRes.GetItems()[0])
 
 	file := searchRes.GetItems()[0]
 
@@ -167,7 +173,7 @@ func FindFile(bucketId, fileId string) (*File, error) {
 func FindFileById(id string) (*File, error) {
 	file := NewFile()
 
-	return file, findOne(id, file)
+	return file, findOne(NewIDFromString(id), file)
 }
 
 // NewOrLoadBucket создать bucket
@@ -216,6 +222,11 @@ func NewOrLoadFileOfBucket(bucketName, fileName string) (*File, error) {
 		bucketFile, err := FindFile(CollNameBucket, bucketName)
 
 		if err != nil {
+
+			if err == ErrNotFound {
+				return nil, ErrNotFound
+			}
+
 			return nil, err
 		}
 
@@ -238,6 +249,8 @@ func CreateFile(bucketName string, file *File) (err error) {
 	}
 
 	var bucketFile *File
+	// var prefixID string // В случае bucket это buckets:
+	// в случае файла это buckets:234:files:###
 
 	if file.IncludeCollections(CollNameFile) {
 		bucketFile, err = FindFile(CollNameBucket, bucketName)
@@ -248,9 +261,10 @@ func CreateFile(bucketName string, file *File) (err error) {
 		}
 
 		file.AddCollections(bucketFile.Id.String())
+		// prefixID = "buckets:"+bucketFile.Id.String()
 	} else if file.IncludeCollections(CollNameBucket) && bucketName == CollNameBucket {
 
-		glog.Infof("manager: create new bucket=%v", file.GetExtId())
+		glog.V(2).Infof("manager: create new bucket=%v", file.GetExtId())
 
 	} else {
 		glog.Errorf("manager: rejected creating file because not valid collections, colls=%v", file.Collections)
@@ -265,7 +279,7 @@ func CreateFile(bucketName string, file *File) (err error) {
 		return ErrRejected
 	}
 
-	file.SetId(uuid.NewV1())
+	file.Id.SetUint64(0)
 	file.BeforeCreated()
 
 	return UpsertFile(file)
@@ -273,15 +287,9 @@ func CreateFile(bucketName string, file *File) (err error) {
 
 // UpsertFile обновить файл
 func UpsertFile(file *File) error {
-
-	if file.IsNew() {
-		glog.Errorf("manager: rejected upsert file because file is new")
-		return ErrNotValidData
-	}
-
 	file.BeforeUpdated()
 
-	if err := updateOne(file.Id.String(), file); err != nil {
+	if err := updateOne(file); err != nil {
 		glog.Errorf("upsert: error update err=%v, model=%v", err, file)
 
 		return err
@@ -303,25 +311,33 @@ func Delete(file *File) error {
 	return UpsertFile(file)
 }
 
-func findOne(id string, file *File) error {
+func findOne(id ID, file *File) error {
+
 	return Store.View(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(StoreBucketName))
 
 		var buff = bytes.NewBuffer([]byte{})
 		dec := gob.NewDecoder(buff)
 
-		buff.Write(b.Get([]byte(id)))
+		buff.Write(b.Get(id.Bytes()))
 
 		return dec.Decode(file)
 	})
 }
 
-func updateOne(id string, file *File) error {
+func updateOne(file *File) error {
 	return Store.Update(func(tx *bolt.Tx) error {
 		b := tx.Bucket([]byte(StoreBucketName))
 
 		var buff = bytes.NewBuffer([]byte{})
 		enc := gob.NewEncoder(buff)
+
+		if file.IsNew() {
+			_id, _ := b.NextSequence()
+			file.Id.SetUint64(_id)
+		}
+
+		glog.V(2).Infof("file is new=%v, id=%v", file.IsNew(), file.Id.String())
 
 		if err := enc.Encode(file); err != nil {
 			glog.Errorln("encode: ", err)
@@ -329,13 +345,13 @@ func updateOne(id string, file *File) error {
 			return err
 		}
 
-		if err := b.Put([]byte(id), buff.Bytes()); err != nil {
+		if err := b.Put(file.Id.Bytes(), buff.Bytes()); err != nil {
 			glog.Errorln("update: ", err)
 
 			return err
 		}
 
-		if err := Search.Index(id, file); err != nil {
+		if err := Search.Index(file.Id.String(), file); err != nil {
 			glog.Errorln("update: ", err)
 
 			return err

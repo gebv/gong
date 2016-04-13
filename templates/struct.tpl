@@ -36,6 +36,8 @@ type {{.name}} struct {
 {{define "setter"}}
 
 {{- if and (eq (hasPrefix .field.type "map") false) (eq (hasPrefix .field.type "[]") false) }}
+
+
 // Set{{.field.name}} set {{.field.name}}
 func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.field.type}}) {
     {{ .structname | firstLower }}.{{.field.name}} = v
@@ -43,6 +45,15 @@ func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.f
 {{ end }} 
 
 {{- if (hasPrefix .field.type "[]") }}
+
+// Set{{.field.name}} set all elements {{.field.name}}
+func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.field.type}}) {
+   
+    for _, value := range v {
+        {{ .structname | firstLower }}.Add{{.field.name}}(value)
+    }
+}
+
 // Add{{.field.name}} add element {{.field.name}}
 func ({{ .structname | firstLower }} *{{.structname}}) Add{{.field.name}}(v {{substring .field.type 2}}) {
     if {{ .structname | firstLower }}.Include{{.field.name}}(v) {

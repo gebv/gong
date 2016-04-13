@@ -37,6 +37,8 @@ func InitStore() error {
 	})
 
 	if Search, err = bleve.Open(dbSearch); err != nil {
+		// numberField := bleve.NewNumericFieldMapping()
+
 		notAnalizedField := bleve.NewTextFieldMapping()
 		notAnalizedField.Analyzer = "keyword"
 

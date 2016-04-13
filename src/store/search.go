@@ -41,7 +41,7 @@ func SearchPerPage(filter *SearchFileter) *SearchResult {
 	for _, hit := range searchResults.Hits {
 		file := NewFile()
 
-		if err := findOne(hit.ID, file); err != nil {
+		if err := findOne(NewIDFromString(hit.ID), file); err != nil {
 			glog.Warningf("search: find by item=%v, err=%v", hit.ID, err)
 			continue
 		}
@@ -170,6 +170,14 @@ func (s *SearchFileter) GetSize() int {
 	return s.Size
 }
 
+// SetCollections set all elements Collections
+func (s *SearchFileter) SetCollections(v []string) {
+
+	for _, value := range v {
+		s.AddCollections(value)
+	}
+}
+
 // AddCollections add element Collections
 func (s *SearchFileter) AddCollections(v string) {
 	if s.IncludeCollections(v) {
@@ -288,6 +296,14 @@ type SearchResult struct {
 	HasNext bool
 
 	NextPage int
+}
+
+// SetItems set all elements Items
+func (s *SearchResult) SetItems(v []*File) {
+
+	for _, value := range v {
+		s.AddItems(value)
+	}
 }
 
 // AddItems add element Items

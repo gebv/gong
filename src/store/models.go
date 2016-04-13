@@ -1,6 +1,6 @@
 package store
 
-import "github.com/satori/go.uuid"
+// import "github.com/satori/go.uuid"
 import "github.com/golang/glog"
 import "fmt"
 import "time"
@@ -16,8 +16,7 @@ var (
 
 //dico struct
 //config.toml
-// name ="File"
-
+// name = "File"
 // [[transform]]
 // type = "UpdateFileDTO"
 // custom = '''
@@ -38,6 +37,7 @@ var (
 // type = "CreateFileDTO"
 // custom = '''
 // f.SetProps(d.Props)
+// f.SetCollections(d.Collections)
 // '''
 
 // [[transform.map]]
@@ -50,15 +50,12 @@ var (
 // to ="Description"
 // from = "Description"
 // [[transform.map]]
-// to ="Collections"
-// from = "Collections"
-// [[transform.map]]
 // to ="Tags"
 // from = "Tags"
 
 // [[fields]]
 // name = "Id"
-// type = "uuid.UUID"
+// type = "ID"
 
 // [[fields]]
 // name = "ExtId"
@@ -106,7 +103,6 @@ var (
 // [[fields]]
 // name = "UpdatedAt"
 // type = "time.Time"
-
 //config.toml
 //AUTOGENERATE.DICO>>>
 //	The text in the section 'AUTOGENERATE.DICO' automatically generated, please do not edit it
@@ -122,7 +118,7 @@ func NewFile() *File {
 }
 
 type File struct {
-	Id uuid.UUID
+	Id ID
 
 	// Представление третей стороны
 	ExtId string
@@ -148,12 +144,12 @@ type File struct {
 }
 
 // SetId set Id
-func (f *File) SetId(v uuid.UUID) {
+func (f *File) SetId(v ID) {
 	f.Id = v
 }
 
 // GetId get Id
-func (f *File) GetId() uuid.UUID {
+func (f *File) GetId() ID {
 	return f.Id
 }
 
@@ -185,6 +181,14 @@ func (f *File) SetDescription(v string) {
 // GetDescription get Description
 func (f *File) GetDescription() string {
 	return f.Description
+}
+
+// SetCollections set all elements Collections
+func (f *File) SetCollections(v []string) {
+
+	for _, value := range v {
+		f.AddCollections(value)
+	}
 }
 
 // AddCollections add element Collections
@@ -262,6 +266,14 @@ func (f *File) ExistKeyProps(k string) bool {
 
 func (f *File) GetOneProps(k string) interface{} {
 	return f.Props[k]
+}
+
+// SetTags set all elements Tags
+func (f *File) SetTags(v []string) {
+
+	for _, value := range v {
+		f.AddTags(value)
+	}
 }
 
 // AddTags add element Tags
@@ -351,9 +363,9 @@ func (f *File) TransformFrom(v interface{}) error {
 		f.ExtId = d.ExtId
 		f.Articul = d.Articul
 		f.Description = d.Description
-		f.Collections = d.Collections
 		f.Tags = d.Tags
 		f.SetProps(d.Props)
+		f.SetCollections(d.Collections)
 
 	default:
 		glog.Errorf("Not supported type %v", v)
@@ -422,6 +434,14 @@ func (a *Attribute) SetValue(v interface{}) {
 // GetValue get Value
 func (a *Attribute) GetValue() interface{} {
 	return a.Value
+}
+
+// SetValues set all elements Values
+func (a *Attribute) SetValues(v []interface{}) {
+
+	for _, value := range v {
+		a.AddValues(value)
+	}
 }
 
 // AddValues add element Values

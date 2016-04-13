@@ -82,8 +82,10 @@ func TestSearchSimpleProcedures(t *testing.T) {
 	}
 
 	// Создать пару записей в ExtId2 bucket
+	countFiles := 30
+	separate := 5
 
-	for i := 0; i < 30; i++ {
+	for i := 0; i < countFiles; i++ {
 		newFile := NewCreateFileDTO()
 		newFile.ExtId = "file" + strconv.Itoa(i)
 		newFile.Description = "description" + strconv.Itoa(i)
@@ -93,18 +95,27 @@ func TestSearchSimpleProcedures(t *testing.T) {
 		file.AddCollections(CollNameFile)
 
 		CreateFile("ExtId2", file)
+
+		file = NewFile()
+		file.TransformFrom(newFile)
+		file.AddCollections(CollNameFile)
+
+		if i%separate == 0 {
+			CreateFile("ExtId4", file)
+		}
 	}
 
 	filter = NewSearchFileter()
-	filter.AddCollections(ids["2"])
+	filter.AddCollections("file")
+	filter.AddCollections(ids["4"])
 	res = SearchPerPage(filter)
 
-	if res.Total != 30 {
+	if res.Total != countFiles/5 {
 		t.Error("not expected search result, res=%v", res)
 		return
 	}
 
-	if res.Items[0].ExtId != "file29" {
+	if res.Items[0].ExtId != "file25" {
 		t.Error("not expected search order result, res=%v", res.Items[0])
 		return
 	}

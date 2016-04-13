@@ -41,23 +41,23 @@ func RunServer() {
 
 	g := gSettings.Group("/api/v1")
 
-	gClassifers := g.Group("/buckets")
+	gBuckets := g.Group("/buckets")
 
 	// Routes classifers
-	gClassifers.Get("/:bucket_id", getItem())
-	gClassifers.Get("/search", searchClassifer()) // ok
-	gClassifers.Put("/:bucket_id", updateItem())
-	gClassifers.Delete("/:bucket_id", deleteClassifer())
-	gClassifers.Post("", createClassifer())
+	gBuckets.Get("/:bucket_id", getBucket())
+	gBuckets.Get("/search", searchBuckets())
+	gBuckets.Put("/:bucket_id", updateBucket())
+	gBuckets.Delete("/:bucket_id", deleteBucket())
+	gBuckets.Post("", createBucket())
 
-	gItems := g.Group("/buckets/:bucket_id/items")
+	gItems := g.Group("/buckets/:bucket_id/files")
 
-	// Routes items
-	gItems.Get("/:file_id", getItem())
-	gItems.Get("/search", searchItem())
-	gItems.Put("/:file_id", updateItem())
-	gItems.Delete("/:file_id", deleteClassifer())
-	gItems.Post("", createItem())
+	// // Routes items
+	gItems.Get("/:file_id", getFile())
+	gItems.Get("/search", searchFiles())
+	gItems.Put("/:file_id", updateFile())
+	gItems.Delete("/:file_id", deleteFile())
+	gItems.Post("", createFile())
 
 	//
 

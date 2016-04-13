@@ -14,8 +14,9 @@ func FromJson(obj interface{}, data interface{}) error {
 {{end}}
 
 {{ define "stringer" }}
-{{range $index, $name := . -}}
-var {{$name | toUpper}} = "{{$name | toLower "_"}}"
+{{ $prefixField := .fieldprefix }}
+{{range $field := .strings -}}
+var {{toUpper $prefixField}}{{toUpper $field.name}} = "{{toLower $field.name "_"}}"
 {{ end }} 
 {{ end }}
 
