@@ -11,8 +11,7 @@ import (
 )
 
 func initConfigAndDataBase() {
-	os.Remove(".testdatabase.bolt")
-	os.RemoveAll(".testdatabase.bleve")
+	clearDatatestFiles()
 
 	if err := utils.InitConfig("../../config/config.toml.travis"); err != nil {
 		glog.Fatal(err)
@@ -26,6 +25,11 @@ func initConfigAndDataBase() {
 		glog.Fatal(err)
 		return
 	}
+}
+
+func clearDatatestFiles() {
+	os.Remove(".testdatabase.bolt")
+	os.RemoveAll(".testdatabase.bleve")
 }
 
 func LoadFixtures(t *testing.T) map[string]string {
@@ -104,6 +108,8 @@ func TestSearchSimpleProcedures(t *testing.T) {
 		t.Error("not expected search order result, res=%v", res.Items[0])
 		return
 	}
+
+	clearDatatestFiles()
 }
 
 func TestCheckSimpleProcedures(t *testing.T) {
@@ -260,4 +266,6 @@ func TestCheckSimpleProcedures(t *testing.T) {
 		t.Errorf("not valid field 'Description'")
 		return
 	}
+
+	clearDatatestFiles()
 }
