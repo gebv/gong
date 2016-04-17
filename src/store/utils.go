@@ -6,6 +6,8 @@ import (
 	"strconv"
 )
 
+// identificator
+
 func NewIDFromString(v string) ID {
 	id := ID(0)
 	if err := id.SetString(v); err != nil {

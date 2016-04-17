@@ -3,34 +3,51 @@ package store
 import "github.com/blevesearch/bleve"
 import "github.com/golang/glog"
 
-var itemsPerPage = 2
+// import "time"
 
-// SearchPerPage поиск записей (по умолчанию записи отсортированы по мере их создания)
+var itemsPerPage = 27
+
+// SearchPerPage поиск записей (по умолчанию записи отсортированы по мере их создания, всегда по itemsPerPage!)
 func SearchPerPage(filter *SearchFileter) *SearchResult {
 	result := NewSearchResult()
 
+	filter.Size = itemsPerPage
+
 	conjuncts := []bleve.Query{}
+	countMin := 0
 
 	for _, collection := range filter.GetCollections() {
 		conjuncts = append(conjuncts, bleve.NewTermQuery(collection).SetField("Collections"))
+		countMin++
 	}
 
 	if len(filter.GetExtId()) != 0 {
 		conjuncts = append(conjuncts, bleve.NewTermQuery(filter.GetExtId()).SetField("ExtId"))
+		countMin++
 	}
 
 	if filter.HasEnabled {
 		conjuncts = append(conjuncts, bleve.NewBoolFieldQuery(false).SetField("IsRemoved"))
+		countMin++
 	}
 
 	if len(filter.GetQuery()) > 0 {
 		conjuncts = append(conjuncts, bleve.NewQueryStringQuery(filter.GetQuery()))
+		countMin++
 	}
 
-	query := bleve.NewConjunctionQuery(conjuncts)
+	// var start = new(string)
+	// var end = new(string)
+	// *start = "2020-11-10 23:00:00"
+	// *end = "2009-11-10 23:00:00"
+
+	// conjuncts = append(conjuncts, bleve.NewDateRangeQuery(end, start).SetField("CreatedAt"))
+	// countMin++
+
+	query := bleve.NewDisjunctionQueryMin(conjuncts, float64(countMin))
 	search := bleve.NewSearchRequest(query)
-	search.Size = itemsPerPage
-	search.From = itemsPerPage * filter.Page
+	search.Size = filter.Size
+	search.From = filter.Size * filter.Page
 
 	searchResults, err := Search.Search(search)
 
@@ -41,12 +58,12 @@ func SearchPerPage(filter *SearchFileter) *SearchResult {
 	for _, hit := range searchResults.Hits {
 		file := NewFile()
 
-		if err := findOne(NewIDFromString(hit.ID), file); err != nil {
+		if file, err = FindFileById(hit.ID); err != nil {
 			glog.Warningf("search: find by item=%v, err=%v", hit.ID, err)
 			continue
 		}
 
-		result.AddItems(file)
+		result.Items = append(result.Items, file)
 	}
 
 	result.SetTotal(int(searchResults.Total))
@@ -298,52 +315,9 @@ type SearchResult struct {
 	NextPage int
 }
 
-// SetItems set all elements Items
-func (s *SearchResult) SetItems(v []*File) {
-
-	for _, value := range v {
-		s.AddItems(value)
-	}
-}
-
-// AddItems add element Items
-func (s *SearchResult) AddItems(v *File) {
-	if s.IncludeItems(v) {
-		return
-	}
-
-	s.Items = append(s.Items, v)
-}
-
-// RemoveItems remove element Items
-func (s *SearchResult) RemoveItems(v *File) {
-	if !s.IncludeItems(v) {
-		return
-	}
-
-	_i := s.IndexItems(v)
-
-	s.Items = append(s.Items[:_i], s.Items[_i+1:]...)
-}
-
 // GetItems get Items
 func (s *SearchResult) GetItems() []*File {
 	return s.Items
-}
-
-// IndexItems get index element Items
-func (s *SearchResult) IndexItems(v *File) int {
-	for _index, _v := range s.Items {
-		if _v == v {
-			return _index
-		}
-	}
-	return -1
-}
-
-// IncludeItems has exist value Items
-func (s *SearchResult) IncludeItems(v *File) bool {
-	return s.IndexItems(v) > -1
 }
 
 // SetTotal set Total

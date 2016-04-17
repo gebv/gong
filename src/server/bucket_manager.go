@@ -75,7 +75,7 @@ func updateBucket() echo.HandlerFunc {
 			return err
 		}
 
-		if err := store.UpsertFile(file); err != nil {
+		if err := store.UpdateFile(file); err != nil {
 			glog.Errorf("bucket update: upsert bucket=%v, err=%v", id, err)
 
 			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
@@ -97,10 +97,13 @@ func createBucket() echo.HandlerFunc {
 
 		file, err := store.NewOrLoadBucket(dto.ExtId)
 
-		if err != nil && err != store.ErrNotFound {
-			glog.Errorf("bucket create: get bucket=%v, err=%v", dto.ExtId, err)
+		if err != nil {
 
-			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
+			if err == store.ErrNotFound {
+				return c.JSON(http.StatusBadRequest, F(CodeUnknown))
+			}
+
+			return c.JSON(http.StatusBadRequest, F(CodeNotFound))
 		}
 
 		if !file.IsNew() {
@@ -115,8 +118,9 @@ func createBucket() echo.HandlerFunc {
 		}
 
 		glog.Infof("%+v", file)
+		file.AddCollections(store.CollNameBucket)
 
-		if err := store.CreateFile(store.CollNameBucket, file); err != nil {
+		if err := store.CreateFile(file); err != nil {
 			glog.Errorf("bucket create: bucket=%v, err=%v", dto.ExtId, err)
 
 			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
@@ -145,7 +149,7 @@ func deleteBucket() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, F(CodeNotFound, "file is not found or another reason"))
 		}
 
-		if err := store.Delete(file); err != nil {
+		if err := store.DeleteFile(file); err != nil {
 			glog.Errorf("bucket delete: bucket=%v, err=%v", id, err)
 
 			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
@@ -158,8 +162,9 @@ func deleteBucket() echo.HandlerFunc {
 func searchBuckets() echo.HandlerFunc {
 	return func(c echo.Context) error {
 		filter := store.NewSearchFileter()
-		filter.Query = c.QueryParam("query")
+		filter.Query = c.QueryParam("q")
 		filter.Page, _ = strconv.Atoi(c.QueryParam("page"))
+		filter.SetHasEnabled(true) // только не удаленные
 		filter.AddCollections(store.CollNameBucket)
 		result := store.SearchPerPage(filter)
 

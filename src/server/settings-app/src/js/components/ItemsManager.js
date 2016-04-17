@@ -73,50 +73,7 @@ var mapViews = {
         }
     },
     "items": {
-        controller: function(c) {
-            var api = {
-                onEdit: function(mode_name) {
-                    return function(e) {
-                        e.preventDefault();
-
-                        c.mode(mode_name);
-
-                        return false;
-                    }
-                }
-            }
-
-            api = _.extend({}, api, c);
-
-            return api;
-        },
-        view: function(c, args) {
-            var url = "/@settings/classifers/" + args.data.ItemId + "/items";
-            var isShowSubPositions = c.resource_name == ItemActions.CLASSIFERS;
-            var buttonPositions = <a class="uk-button uk-button-primary" href={url} config={m.route}>Позиции</a>
-
-            var listRefWidgets = [];
-
-            if (args.data.Props._BuildTraceWidgets) {
-                for (var i = 0; i < args.data.Props._BuildTraceWidgets.length; i += 2) {
-                    var url = "/@settings/classifers/"+args.data.Props._BuildTraceWidgets[i]+"/"+args.resource_name+"/edit?special_id="+args.data.Props._BuildTraceWidgets[i+1];
-                    var label = [args.data.Props._BuildTraceWidgets[i], args.data.Props._BuildTraceWidgets[i + 1]].join(" ");
-                    
-                    listRefWidgets.push(m("li", m("a", {href: url, config: m.route}, label)))
-                }
-            }
-            
-            return <div class="uk-panel uk-panel-box" id={args.data.ExtId}>
-                <div class="uk-panel-badge uk-text-small uk-text-muted">{args.data.ExtId}</div>
-                <p class="uk-panel-title"><a onclick={c.onEdit("edit") } class="uk-text-success uk-icon-edit" href=""></a> {args.data.Title}</p>
-                <p class="uk-article-meta">{args.data.Category} {args.data.Tags}</p>
-                <div>
-                    {isShowSubPositions ? buttonPositions : ""}
-                </div>
-                <p>related widgets:</p>
-                <ul class="uk-list">{listRefWidgets}</ul>
-            </div>
-        }
+        
     }
 }
 

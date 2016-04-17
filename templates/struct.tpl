@@ -1,5 +1,7 @@
 // Создание структуры
 {{define "struct" }}
+{{with .disableConstructor }}
+{{else}}
 func New{{toUpper .name}}() *{{.name}} {
     model := new({{.name}})
     {{ range $key, $field := .fields}}
@@ -9,6 +11,7 @@ func New{{toUpper .name}}() *{{.name}} {
     {{ end }}
     return model
 }
+{{end}}
 
 {{- with .comment }}// {{.name}} {{.comment}}{{end}}
 type {{.name}} struct {
@@ -46,6 +49,9 @@ func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.f
 
 {{- if (hasPrefix .field.type "[]") }}
 
+
+{{/* Поддержка только элементарных типов */}}
+{{if (intersection (substring .field.type 2) "string" "interface{}")}}
 // Set{{.field.name}} set all elements {{.field.name}}
 func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.field.type}}) {
    
@@ -73,6 +79,8 @@ func ({{ .structname | firstLower }} *{{.structname}}) Remove{{.field.name}}(v {
     
     {{ .structname | firstLower }}.{{.field.name}} = append({{ .structname | firstLower }}.{{.field.name}}[:_i], {{ .structname | firstLower }}.{{.field.name}}[_i+1:]...)
 }
+{{ end }}
+
 {{ end }}
 
 {{- if (hasPrefix .field.type "map") }}
@@ -113,6 +121,9 @@ func ({{ .structname | firstLower }} *{{.structname}}) Get{{.field.name}}() {{.f
 }
 
 {{- if (hasPrefix .field.type "[]") }}
+
+{{/* Поддержка только элементарных типов */}}
+{{if (intersection (substring .field.type 2) "string" "interface{}")}}
 // Index{{.field.name}} get index element {{.field.name}}
 func ({{ .structname | firstLower }} *{{.structname}}) Index{{.field.name}}(v {{substring .field.type 2}}) int {
     for _index, _v := range {{ .structname | firstLower }}.{{.field.name}} {
@@ -127,6 +138,8 @@ func ({{ .structname | firstLower }} *{{.structname}}) Index{{.field.name}}(v {{
 func ({{ .structname | firstLower }} *{{.structname}}) Include{{.field.name}}(v {{substring .field.type 2}}) bool {
     return {{ .structname | firstLower }}.Index{{.field.name}}(v) > -1
 }
+{{ end}}
+
 {{ end }}
 
 {{- if (hasPrefix .field.type "map") }}

@@ -1,7 +1,6 @@
 package widgets
 
 import (
-	"fmt"
 	"strings"
 )
 
@@ -94,18 +93,4 @@ func (c *Context) GetQueryParam(key string) string {
 
 func (c *Context) GetFormValue(key string) string {
 	return c.Context.Request().FormValue(key)
-}
-
-//
-
-func (c *Context) traceWidgets(group, name string) error {
-	c.TraceWidgets = append(c.TraceWidgets, group, name)
-
-	if c.depth > CountWidgetPerPage {
-		return fmt.Errorf("more widgets per request (for example 'layout' is looped, clear 'layout')")
-	}
-
-	c.depth++
-
-	return nil
 }

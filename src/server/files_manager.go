@@ -1,14 +1,14 @@
 package server
 
 import (
-	// "bytes"
+	"bytes"
 	"github.com/golang/glog"
 	"github.com/labstack/echo"
 	"net/http"
 	"store"
 	"strconv"
 	// "strings"
-	// "widgets"
+	"widgets"
 )
 
 // func getBucket() echo.HandlerFunc {
@@ -19,10 +19,16 @@ import (
 
 func getFile() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		bucket_id := c.Param("bucket_id")
+		// bucket_id := c.Param("bucket_id")
+		bucket_id := c.QueryParam("bucket_id")
 		id := c.Param("file_id")
 
-		file, err := store.NewOrLoadFileOfBucket(bucket_id, id)
+		if !store.IsExistBucket(bucket_id) {
+
+			return c.JSON(http.StatusBadRequest, F(CodeInvalidData, "not found bucket or disabled bucket"))
+		}
+
+		file, err := store.NewOrLoadFile(bucket_id, id)
 
 		if err != nil {
 
@@ -45,9 +51,16 @@ func getFile() echo.HandlerFunc {
 
 func updateFile() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		bucket_id := c.Param("bucket_id")
+		// bucket_id := c.Param("bucket_id")
+		bucket_id := c.QueryParam("bucket_id")
 		id := c.Param("file_id")
-		file, err := store.NewOrLoadFileOfBucket(bucket_id, id)
+
+		if !store.IsExistBucket(bucket_id) {
+
+			return c.JSON(http.StatusBadRequest, F(CodeInvalidData, "not found bucket or disabled bucket"))
+		}
+
+		file, err := store.NewOrLoadFile(bucket_id, id)
 
 		if err != nil {
 			if err == store.ErrNotFound {
@@ -77,7 +90,7 @@ func updateFile() echo.HandlerFunc {
 			return err
 		}
 
-		if err := store.UpsertFile(file); err != nil {
+		if err := store.UpdateFile(file); err != nil {
 			glog.Errorf("file update: upsert bucket=%v, file=%v, err=%v", bucket_id, id, err)
 
 			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
@@ -89,7 +102,13 @@ func updateFile() echo.HandlerFunc {
 
 func createFile() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		bucket_id := c.Param("bucket_id")
+		// bucket_id := c.Param("bucket_id")
+		bucket_id := c.QueryParam("bucket_id")
+
+		if !store.IsExistBucket(bucket_id) {
+
+			return c.JSON(http.StatusBadRequest, F(CodeInvalidData, "not found bucket or disabled bucket"))
+		}
 
 		dto := store.NewCreateFileDTO()
 
@@ -99,7 +118,7 @@ func createFile() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, F(CodeInvalidData))
 		}
 
-		file, err := store.NewOrLoadFileOfBucket(bucket_id, dto.ExtId)
+		file, err := store.NewOrLoadFile(bucket_id, dto.ExtId)
 
 		glog.V(2).Info("find file id=%v, [%v]", dto.ExtId, file)
 
@@ -122,7 +141,7 @@ func createFile() echo.HandlerFunc {
 
 		glog.Infof("%+v", file)
 
-		if err := store.CreateFile(bucket_id, file); err != nil {
+		if err := store.CreateFile(file); err != nil {
 			glog.Errorf("file create: bucket=%v, file=%v, err=%v", bucket_id, dto.ExtId, err)
 
 			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
@@ -134,10 +153,16 @@ func createFile() echo.HandlerFunc {
 
 func deleteFile() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		bucket_id := c.Param("bucket_id")
+		// bucket_id := c.Param("bucket_id")
+		bucket_id := c.QueryParam("bucket_id")
 		id := c.Param("file_id")
 
-		file, err := store.NewOrLoadFileOfBucket(bucket_id, id)
+		if !store.IsExistBucket(bucket_id) {
+
+			return c.JSON(http.StatusBadRequest, F(CodeInvalidData, "not found bucket or disabled bucket"))
+		}
+
+		file, err := store.NewOrLoadFile(bucket_id, id)
 
 		if err != nil {
 			if err == store.ErrNotFound {
@@ -153,7 +178,7 @@ func deleteFile() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, F(CodeNotFound, "file is not found or another reason"))
 		}
 
-		if err := store.Delete(file); err != nil {
+		if err := store.DeleteFile(file); err != nil {
 			glog.Errorf("bucket file: bucket=%v, file=%v, err=%v", bucket_id, id, err)
 
 			return c.JSON(http.StatusBadRequest, F(CodeUnknown))
@@ -165,7 +190,13 @@ func deleteFile() echo.HandlerFunc {
 
 func searchFiles() echo.HandlerFunc {
 	return func(c echo.Context) error {
-		bucket_id := c.Param("bucket_id")
+		// bucket_id := c.Param("bucket_id")
+		bucket_id := c.QueryParam("bucket_id")
+
+		if !store.IsExistBucket(bucket_id) {
+
+			return c.JSON(http.StatusBadRequest, F(CodeInvalidData, "not found bucket or disabled bucket"))
+		}
 
 		bucket, err := store.NewOrLoadBucket(bucket_id)
 
@@ -175,18 +206,23 @@ func searchFiles() echo.HandlerFunc {
 			return c.JSON(http.StatusBadRequest, F(CodeNotFound))
 		}
 
-		if bucket.IsNew() {
-			glog.Errorf("search files: bucket=%v, err=%v", bucket_id, err)
-
-			return c.JSON(http.StatusBadRequest, F(CodeNotFound))
-		}
-
 		filter := store.NewSearchFileter()
-		filter.Query = c.QueryParam("query")
+		filter.Query = c.QueryParam("q")
 		filter.Page, _ = strconv.Atoi(c.QueryParam("page"))
 		filter.AddCollections(store.CollNameFile)
 		filter.AddCollections(bucket.Id.String())
+		filter.SetHasEnabled(true) // только не удаленные
 		result := store.SearchPerPage(filter)
+
+		for _, widget := range result.Items {
+			ctx := widgets.NewContext(c)
+
+			if err := ctx.RenderWidget(bytes.NewBufferString(""), bucket_id, widget.ExtId); err != nil {
+				widget.Props["_BuildError"] = err.Error()
+			}
+
+			widget.Props["_BuildTraceWidgets"] = ctx.TraceWidgets
+		}
 
 		return c.JSON(http.StatusOK, OK(result))
 	}

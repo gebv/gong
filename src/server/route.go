@@ -19,6 +19,11 @@ func hello() echo.HandlerFunc {
 
 var settingsApp *rice.Box
 
+var emptyHandler = func(c echo.Context) error {
+	_, err := c.Response().Write([]byte{})
+	return err
+}
+
 func RunServer() {
 	// Echo instance
 	e := echo.New()
@@ -33,6 +38,7 @@ func RunServer() {
 	e.Get("/", WebAppEntryPoint())
 	e.Get("/*", WebAppEntryPoint())
 	e.Post("/*", WebAppEntryPoint())
+	e.Get("/favicon.ico", echo.HandlerFunc(emptyHandler))
 
 	gSettings := e.Group("/@settings")
 
@@ -43,14 +49,14 @@ func RunServer() {
 
 	gBuckets := g.Group("/buckets")
 
-	// Routes classifers
+	// // Routes classifers
 	gBuckets.Get("/:bucket_id", getBucket())
 	gBuckets.Get("/search", searchBuckets())
 	gBuckets.Put("/:bucket_id", updateBucket())
 	gBuckets.Delete("/:bucket_id", deleteBucket())
 	gBuckets.Post("", createBucket())
 
-	gItems := g.Group("/buckets/:bucket_id/files")
+	gItems := g.Group("/files")
 
 	// // Routes items
 	gItems.Get("/:file_id", getFile())

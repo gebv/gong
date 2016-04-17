@@ -12,6 +12,7 @@ import (
 	"io"
 	"net/http"
 	"store"
+	// "strings"
 )
 
 const (
@@ -92,8 +93,10 @@ func NewContext(c echo.Context) *Context {
 		"md": func(v interface{}) template.HTML {
 			var str string
 			switch v.(type) {
-			case string, template.HTML:
+			case string:
 				str = v.(string)
+			case template.HTML:
+				str = string(v.(template.HTML))
 			default:
 				str = fmt.Sprintf("%v", v)
 			}
@@ -107,7 +110,7 @@ func NewContext(c echo.Context) *Context {
 			return m[key]
 		},
 		"get_widget": func(group, key string) interface{} {
-			item, err := store.NewOrLoadFileOfBucket(group, key)
+			item, err := store.NewOrLoadFile(group, key)
 
 			if err != nil {
 				glog.Warningf("template funcs: get_execute file: group=%v, key=%v, err=%v", group, key, err)
@@ -132,7 +135,7 @@ func NewContext(c echo.Context) *Context {
 		"widget": func(ctx *Context, args ...interface{}) template.HTML {
 
 			context := NewContext(ctx.Context)
-			context.Global = ctx.Global // копируется ссылка значений
+			context.Global = ctx.Global // копируется ссылка на map
 
 			if len(args) == 0 || len(args) < 2 {
 				glog.Warningf("template funcs: min 2 args %v\n", args)
@@ -150,12 +153,11 @@ func NewContext(c echo.Context) *Context {
 
 			buff := bytes.NewBufferString("")
 
-			context.Self["_group"] = _group
-			context.Self["_name"] = _key
-
 			if err := context.RenderWidget(buff, _group, _key); err != nil {
 				glog.Warningf("template funcs: execute file: group=%v, kye=%v, err=%v", _group, _key, err)
 			}
+
+			model.TraceWidgets = append(model.TraceWidgets, context.TraceWidgets...)
 
 			// TODO: render widget
 			return template.HTML(buff.String())
@@ -170,26 +172,24 @@ func NewContext(c echo.Context) *Context {
 	return model
 }
 
-type Context struct {
-	Self   map[string]interface{} `toml:"self"`
-	Global map[string]interface{} `toml:"global"`
+type WidgetInfo struct {
+	Id          string
+	ExtId       string
+	Bucket      string
+	Collections []string
+	Description string
+}
 
-	Funcs template.FuncMap
+func (c *Context) traceWidgets(bucket string, file *store.File) error {
+	c.TraceWidgets = append(c.TraceWidgets, WidgetInfo{file.Id.String(), file.ExtId, bucket, file.Collections, file.Description})
 
-	Context echo.Context
+	if c.depth > CountWidgetPerPage {
+		return fmt.Errorf("more widgets per request (for example 'layout' is looped, clear 'layout')")
+	}
 
-	TraceWidgets []string
-	depth        int
+	c.depth++
 
-	isAbort bool
-
-	Routing configRouting `toml:"routing"`
-	Theme   configTheme   `toml:"theme"`
-	Pages   configPage    `toml:"pages"`
-
-	Store   interface{} // Постоянное хранилище
-	Cookie  interface{} //
-	Session interface{} //
+	return nil
 }
 
 // initAppSettings инициализация настроек приложения
@@ -249,10 +249,6 @@ func (c *Context) executeSimpleMode(writer io.Writer, urlPath string) error {
 	// в качестве имени файла используется path
 
 	var bucketName = c.DefaultRouteBucket()
-
-	if err := c.traceWidgets(bucketName, urlPath); err != nil {
-		return err
-	}
 
 	c.Context.Response().Header().Set("Content-Type", c.Pages.DefaultContentType)
 
@@ -352,14 +348,12 @@ func (c *Context) Execute(writer io.Writer, urlPath string) error {
 }
 
 func (c *Context) RenderWidget(writer io.Writer, group, name string) error {
+
 	if c.isAbort {
 		return fmt.Errorf("execute file: abort")
 	}
 
-	if err := c.traceWidgets(group, name); err != nil {
-
-		return err
-	}
+	// TODO: проверка bucket
 
 	widget, err := store.FindFile(group, name)
 
@@ -369,8 +363,22 @@ func (c *Context) RenderWidget(writer io.Writer, group, name string) error {
 		return err
 	}
 
+	if err := c.traceWidgets(group, widget); err != nil {
+
+		return err
+	}
+
 	c.Self["_group"] = group
 	c.Self["_name"] = name
+	c.Self["Widget"] = widget
+
+	// for key, value := range widget.Props {
+	// 	if strings.ToLower(key) == "content" || strings.ToLower(key) == "config" {
+	// 		continue
+	// 	}
+
+	// 	c.Global[key] = value
+	// }
 
 	//
 	// CONFIG

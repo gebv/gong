@@ -5,6 +5,9 @@ var actionTypes = require("../actions/types");
 var appInitialState = {
     items: [],
     isWaitingRequest: false,
+    hasNext: false,
+    nextPage: 0,
+    total: 0
 }
 
 var AppConfig = function(state, action) {
@@ -12,6 +15,9 @@ var AppConfig = function(state, action) {
     state = state || appInitialState
 
     switch (action.type) {
+        case actionTypes.GET_ITEM_REQUEST:
+            state.items = [];
+            break;
         case actionTypes.DELETE_TEMP_ITEM:
             state.items = _.filter(state.items, function(item){
                 return item._TempId != action._TempId;
@@ -48,10 +54,22 @@ var AppConfig = function(state, action) {
             });
             break;
         case actionTypes.SEARCH_ITEM_SUCCESS:
-            state.items = [];
+            // Если первая страница, обновляем список
+            // В противном случае дозагружаем
             
-            if (action.items) {
-                state.items = action.items;    
+            state.hasNext = action.response.Data.HasNext
+            state.nextPage = action.response.Data.NextPage
+            state.total = action.response.Data.Total
+            
+            if (action.response && action.response.Code == "success") {
+                if (action.response.Data.NextPage == 0) {
+                    state.items = action.response.Data.Items;    
+                } else {
+                    _.each(action.response.Data.Items, function(item){
+                        state.items.push(item)
+                    })
+                }
+                    
             }
             
             break;  
@@ -77,7 +95,10 @@ var AppConfig = function(state, action) {
 
 
 var App = redux.combineReducers({
-    app: AppConfig
+    app: AppConfig,
+    lastAction: function(state, action) {
+        return action;
+    }
 })
 
 module.exports = App;
