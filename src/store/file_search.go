@@ -236,17 +236,21 @@ func (s *SearchFileter) IncludeCollections(v string) bool {
 }
 
 // SetParams set all elements Params
-func (s *SearchFileter) SetParams(v map[interface{}]interface{}) {
+func (s *SearchFileter) SetParams(v map[interface{}]interface{}) *SearchFileter {
 	s.Params = make(map[interface{}]interface{})
 
 	for key, value := range v {
 		s.Params[key] = value
 	}
+
+	return s
 }
 
 // AddParams add element by key
-func (s *SearchFileter) SetOneParams(k interface{}, v interface{}) {
+func (s *SearchFileter) SetOneParams(k interface{}, v interface{}) *SearchFileter {
 	s.Params[k] = v
+
+	return s
 }
 
 // RemoveParams remove element by key
@@ -270,6 +274,67 @@ func (s *SearchFileter) ExistKeyParams(k interface{}) bool {
 
 func (s *SearchFileter) GetOneParams(k interface{}) interface{} {
 	return s.Params[k]
+}
+
+func (s *SearchFileter) GetOneParamsString(k interface{}) string {
+	v, exist := s.Params[k]
+	if !exist {
+		return ""
+	}
+
+	vv, valid := v.(string)
+
+	if !valid {
+		return ""
+	}
+
+	return vv
+}
+
+func (s *SearchFileter) GetOneParamsArr(k interface{}) []interface{} {
+	v, exist := s.Params[k]
+
+	if !exist {
+		return []interface{}{}
+	}
+
+	vv, valid := v.([]interface{})
+
+	if !valid {
+		return []interface{}{}
+	}
+
+	return vv
+}
+
+func (s *SearchFileter) GetOneParamsInt(k interface{}) int {
+	v, exist := s.Params[k]
+	if !exist {
+		return 0
+	}
+
+	vv, valid := v.(int)
+
+	if !valid {
+		return 0
+	}
+
+	return vv
+}
+
+func (s *SearchFileter) GetOneParamsBool(k interface{}) bool {
+	v, exist := s.Params[k]
+	if !exist {
+		return false
+	}
+
+	vv, valid := v.(bool)
+
+	if !valid {
+		return false
+	}
+
+	return vv
 }
 
 //<<<AUTOGENERATE.DICO

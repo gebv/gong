@@ -85,17 +85,21 @@ type Context struct {
 }
 
 // SetSelf set all elements Self
-func (c *Context) SetSelf(v map[string]interface{}) {
+func (c *Context) SetSelf(v map[string]interface{}) *Context {
 	c.Self = make(map[string]interface{})
 
 	for key, value := range v {
 		c.Self[key] = value
 	}
+
+	return c
 }
 
 // AddSelf add element by key
-func (c *Context) SetOneSelf(k string, v interface{}) {
+func (c *Context) SetOneSelf(k string, v interface{}) *Context {
 	c.Self[k] = v
+
+	return c
 }
 
 // RemoveSelf remove element by key
@@ -121,18 +125,67 @@ func (c *Context) GetOneSelf(k string) interface{} {
 	return c.Self[k]
 }
 
+func (c *Context) GetOneSelfString(k string) string {
+	v, exist := c.Self[k]
+	if !exist {
+		return ""
+	}
+
+	vv, valid := v.(string)
+
+	if !valid {
+		return ""
+	}
+
+	return vv
+}
+
+func (c *Context) GetOneSelfInt(k string) int {
+	v, exist := c.Self[k]
+	if !exist {
+		return 0
+	}
+
+	vv, valid := v.(int)
+
+	if !valid {
+		return 0
+	}
+
+	return vv
+}
+
+func (c *Context) GetOneSelfBool(k string) bool {
+	v, exist := c.Self[k]
+	if !exist {
+		return false
+	}
+
+	vv, valid := v.(bool)
+
+	if !valid {
+		return false
+	}
+
+	return vv
+}
+
 // SetGlobal set all elements Global
-func (c *Context) SetGlobal(v map[string]interface{}) {
+func (c *Context) SetGlobal(v map[string]interface{}) *Context {
 	c.Global = make(map[string]interface{})
 
 	for key, value := range v {
 		c.Global[key] = value
 	}
+
+	return c
 }
 
 // AddGlobal add element by key
-func (c *Context) SetOneGlobal(k string, v interface{}) {
+func (c *Context) SetOneGlobal(k string, v interface{}) *Context {
 	c.Global[k] = v
+
+	return c
 }
 
 // RemoveGlobal remove element by key
@@ -156,6 +209,51 @@ func (c *Context) ExistKeyGlobal(k string) bool {
 
 func (c *Context) GetOneGlobal(k string) interface{} {
 	return c.Global[k]
+}
+
+func (c *Context) GetOneGlobalString(k string) string {
+	v, exist := c.Global[k]
+	if !exist {
+		return ""
+	}
+
+	vv, valid := v.(string)
+
+	if !valid {
+		return ""
+	}
+
+	return vv
+}
+
+func (c *Context) GetOneGlobalInt(k string) int {
+	v, exist := c.Global[k]
+	if !exist {
+		return 0
+	}
+
+	vv, valid := v.(int)
+
+	if !valid {
+		return 0
+	}
+
+	return vv
+}
+
+func (c *Context) GetOneGlobalBool(k string) bool {
+	v, exist := c.Global[k]
+	if !exist {
+		return false
+	}
+
+	vv, valid := v.(bool)
+
+	if !valid {
+		return false
+	}
+
+	return vv
 }
 
 // SetFuncs set Funcs

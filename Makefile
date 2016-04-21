@@ -4,9 +4,9 @@ build:
 	gofmt -w ./src
 	GOPATH=${GOPATH}:${PWD} go build -o bin/gong src/main.go
 run: build
-	GOPATH=${GOPATH}:${PWD} go run src/main.go -stderrthreshold=INFO
+	GOPATH=${GOPATH}:${PWD} go run src/main.go -stderrthreshold=INFO -v=2
 test: build
-	GOPATH=${GOPATH}:${PWD} go test ./src/store/... -stderrthreshold=INFO
+	GOPATH=${GOPATH}:${PWD} go test ./src/store/...
 	
 build_travis:
 	DICO_TEMPLATES=./templates/* ./vendor/bin/dico ./src *.go
@@ -33,7 +33,8 @@ vendor_get: vendor_clean
 		github.com/boltdb/bolt \
 		github.com/satori/go.uuid \
 		github.com/GeertJohan/go.rice \
-		github.com/gebv/dico
+		github.com/gebv/dico \
+		gopkg.in/go-playground/validator.v8
  	
 setup:
 	ln -s ../settings-app/index.html src/server/web-static/index.html

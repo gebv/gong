@@ -15,6 +15,11 @@ func New{{toUpper .name}}() *{{.name}} {
 
 {{- with .comment }}// {{.name}} {{.comment}}{{end}}
 type {{.name}} struct {
+    {{ range $extend := .extends}}
+    {{ $extend }}
+    {{ end }}
+    
+    
     {{ range $key, $field := .fields}}
     {{with $field.comment}}// {{$field.comment}}{{end}}
     {{$field.name}} {{$field.type}} {{template "structtags" $field.tag}}  
@@ -89,17 +94,21 @@ func ({{ .structname | firstLower }} *{{.structname}}) Remove{{.field.name}}(v {
 {{ $valueType := (index (regexp .field.type $regexp) 2)}}
 
 // Set{{.field.name}} set all elements {{.field.name}}
-func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.field.type}}) {
+func ({{ .structname | firstLower }} *{{.structname}}) Set{{.field.name}}(v {{.field.type}}) *{{.structname}}{
     {{ .structname | firstLower }}.{{.field.name}} = make({{.field.type}})
     
     for key, value := range v {
         {{ .structname | firstLower }}.{{.field.name}}[key] = value
     }
+    
+    return {{ .structname | firstLower }}
 }
 
 // Add{{.field.name}} add element by key
-func ({{ .structname | firstLower }} *{{.structname}}) SetOne{{.field.name}}(k {{ $keyType}}, v {{ $valueType }}) {
+func ({{ .structname | firstLower }} *{{.structname}}) SetOne{{.field.name}}(k {{ $keyType}}, v {{ $valueType }}) *{{.structname}} {
     {{ .structname | firstLower }}.{{.field.name}}[k] = v
+    
+    return {{ .structname | firstLower }}
 }
 
 // Remove{{.field.name}} remove element by key
@@ -156,6 +165,67 @@ func ({{ .structname | firstLower }} *{{.structname}}) ExistKey{{.field.name}}(k
 
 func ({{ .structname | firstLower }} *{{.structname}}) GetOne{{.field.name}}(k {{ $keyType}}) {{ $valueType }} {
     return {{ .structname | firstLower }}.{{.field.name}}[k]
+}
+
+func ({{ .structname | firstLower }} *{{.structname}}) GetOne{{.field.name}}String(k {{ $keyType}}) string {
+    v, exist := {{ .structname | firstLower }}.{{.field.name}}[k] 
+    if !exist {
+        return ""
+    }
+    
+    vv, valid := v.(string)
+    
+    if !valid {
+        return ""
+    }
+    
+    return vv
+}
+
+func ({{ .structname | firstLower }} *{{.structname}}) GetOne{{.field.name}}Arr(k {{ $keyType}}) []interface{} {
+    v, exist := {{ .structname | firstLower }}.{{.field.name}}[k] 
+    
+    if !exist {
+        return []interface{}{}
+    }
+    
+    vv, valid := v.([]interface{})
+    
+    if !valid {
+        return []interface{}{}
+    }
+    
+    return vv
+}
+
+func ({{ .structname | firstLower }} *{{.structname}}) GetOne{{.field.name}}Int(k {{ $keyType}}) int {
+    v, exist := {{ .structname | firstLower }}.{{.field.name}}[k] 
+    if !exist {
+        return 0
+    }
+    
+    vv, valid := v.(int)
+    
+    if !valid {
+        return 0
+    }
+    
+    return vv
+}
+
+func ({{ .structname | firstLower }} *{{.structname}}) GetOne{{.field.name}}Bool(k {{ $keyType}}) bool {
+    v, exist := {{ .structname | firstLower }}.{{.field.name}}[k] 
+    if !exist {
+        return false
+    }
+    
+    vv, valid := v.(bool)
+    
+    if !valid {
+        return false
+    }
+    
+    return vv
 }
 {{ end }}
 

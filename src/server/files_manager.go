@@ -215,13 +215,14 @@ func searchFiles() echo.HandlerFunc {
 		result := store.SearchPerPage(filter)
 
 		for _, widget := range result.Items {
-			ctx := widgets.NewContext(c)
+			ctx := widgets.NewC(c)
+			ctx.InitSettings()
 
-			if err := ctx.RenderWidget(bytes.NewBufferString(""), bucket_id, widget.ExtId); err != nil {
+			if err := ctx.ExecuteFile(bytes.NewBufferString(""), bucket_id, widget.ExtId, true); err != nil {
 				widget.Props["_BuildError"] = err.Error()
 			}
 
-			widget.Props["_BuildTraceWidgets"] = ctx.TraceWidgets
+			widget.Props["_BuildTraceWidgets"] = ctx.GettraceFiles()
 		}
 
 		return c.JSON(http.StatusOK, OK(result))

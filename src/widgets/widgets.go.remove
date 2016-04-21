@@ -12,12 +12,22 @@ import (
 	"io"
 	"net/http"
 	"store"
+	"utils"
 	// "strings"
+
+	"gopkg.in/go-playground/validator.v8"
 )
+
+var validate = validator.New(&validator.Config{TagName: "validate"})
 
 const (
 	// CountWidgetPerPage count widgets per page
 	CountWidgetPerPage = 250
+)
+
+var (
+	AppSettingsBucketName = "settings"
+	AppSettingsFileName   = "app"
 )
 
 const (
@@ -102,40 +112,73 @@ func NewContext(c echo.Context) *Context {
 			}
 			return template.HTML(github_flavored_markdown.Markdown([]byte(str)))
 		},
-		"setter": func(m map[string]interface{}, key string, v interface{}) template.HTML {
-			m[key] = v
-			return ""
+		"newFile": func() *store.File {
+			return store.NewFile()
 		},
-		"getter": func(m map[string]interface{}, key string) interface{} {
-			return m[key]
+		"newMap": func(args ...interface{}) utils.M {
+			v := utils.NewM()
+			for i := 0; i < len(args); i += 2 {
+				v.Set(args[i].(string), args[i+1])
+			}
+			return v
 		},
-		"get_widget": func(group, key string) interface{} {
-			item, err := store.NewOrLoadFile(group, key)
+		"bind": func(i interface{}) error {
+			return model.Bind(i)
+		},
+		"valid": func(rules map[string]interface{}, data map[string]interface{}) (errors map[string]error) {
+			errors = make(map[string]error)
 
-			if err != nil {
-				glog.Warningf("template funcs: get_execute file: group=%v, key=%v, err=%v", group, key, err)
+			for fieldName, rule := range rules {
+				field, exist := data[fieldName]
+
+				if !exist {
+					field = nil
+				}
+
+				if err := validate.Field(field, rule.(string)); err != nil {
+					errors[fieldName] = err
+				}
 			}
 
-			return item
+			return errors
 		},
-		"redirect": func(path string) template.HTML {
-			model.Context.Redirect(302, path)
-			model.Abort()
-			return template.HTML("")
+		"load": func(group string) (*store.File, error) {
+			var id string
+
+			// TODO: вынести в глобальные настройки какие поля с каким полем файла связаны?
+
+			if model.IsPost() {
+				id = model.GetFormValue("id")
+			} else {
+				id = model.GetQueryParam("id")
+			}
+
+			if len(id) != 0 {
+				return store.NewOrLoadFile(group, id)
+			}
+
+			if model.IsPost() {
+				id = model.GetFormValue("ext_id")
+			} else {
+				id = model.GetQueryParam("ext_id")
+			}
+
+			return store.NewOrLoadFile(group, id)
 		},
-		"search": func(group, query string) interface{} {
-			filter := store.NewSearchFileter()
-			filter.AddCollections(group)
-			filter.SetQuery(query)
-
-			items := store.SearchPerPage(filter)
-
-			return items
+		"get": func(group, key string) (*store.File, error) {
+			return store.NewOrLoadFile(group, key)
 		},
-		"widget": func(ctx *Context, args ...interface{}) template.HTML {
+		"upsert": func(file *store.File) error {
+			if file.IsNew() {
+				return store.CreateFile(file)
+			}
 
-			context := NewContext(ctx.Context)
-			context.Global = ctx.Global // копируется ссылка на map
+			return store.UpdateFile(file)
+		},
+
+		"render": func(args ...interface{}) template.HTML {
+			context := NewContext(model.Context)
+			context.Global = model.Global // копируется ссылка на map
 
 			if len(args) == 0 || len(args) < 2 {
 				glog.Warningf("template funcs: min 2 args %v\n", args)
@@ -153,7 +196,7 @@ func NewContext(c echo.Context) *Context {
 
 			buff := bytes.NewBufferString("")
 
-			if err := context.RenderWidget(buff, _group, _key); err != nil {
+			if err := context.ExecuteFile(buff, _group, _key); err != nil {
 				glog.Warningf("template funcs: execute file: group=%v, kye=%v, err=%v", _group, _key, err)
 			}
 
@@ -161,6 +204,20 @@ func NewContext(c echo.Context) *Context {
 
 			// TODO: render widget
 			return template.HTML(buff.String())
+		},
+		"redirect": func(path string) template.HTML {
+			model.Context.Redirect(302, path)
+			model.Abort()
+			return template.HTML("redurect to " + path)
+		},
+		"search": func(group, query string) interface{} {
+			filter := store.NewSearchFileter()
+			filter.AddCollections(group)
+			filter.SetQuery(query)
+
+			items := store.SearchPerPage(filter)
+
+			return items
 		},
 	}
 
@@ -252,7 +309,7 @@ func (c *Context) executeSimpleMode(writer io.Writer, urlPath string) error {
 
 	c.Context.Response().Header().Set("Content-Type", c.Pages.DefaultContentType)
 
-	return c.RenderWidget(writer, bucketName, urlPath)
+	return c.ExecuteFile(writer, bucketName, urlPath)
 }
 
 // Execute получает file с конфигурацией и выполяет действия
@@ -271,7 +328,7 @@ func (c *Context) Execute(writer io.Writer, urlPath string) error {
 				return err
 			}
 
-			return c.RenderWidget(writer, _file.Bucket(), _file.File())
+			return c.ExecuteFile(writer, _file.Bucket(), _file.File())
 		}
 
 		return err
@@ -347,7 +404,7 @@ func (c *Context) Execute(writer io.Writer, urlPath string) error {
 
 }
 
-func (c *Context) RenderWidget(writer io.Writer, group, name string) error {
+func (c *Context) ExecuteFile(writer io.Writer, group, name string) error {
 
 	if c.isAbort {
 		return fmt.Errorf("execute file: abort")
@@ -412,12 +469,7 @@ func (c *Context) RenderWidget(writer io.Writer, group, name string) error {
 	// CONTENT
 	//
 
-	contentRaw, err := extractPropertyByName(widget, "Content")
-
-	if err != nil {
-		glog.Warningf("execute file: get CONTENT group=%v name=%v err=%v", group, name, err)
-		return err
-	}
+	contentRaw := widget.GetOnePropsString("Content")
 
 	compiledContentBuff := bytes.NewBufferString("")
 	err = c.render(compiledContentBuff, "widget_content", contentRaw, c)
@@ -457,7 +509,7 @@ func (c *Context) RenderWidget(writer io.Writer, group, name string) error {
 
 			c.Self["Content"] = template.HTML(contentBuff.String())
 
-			return c.RenderWidget(writer, c.Theme.BucketName, layout)
+			return c.ExecuteFile(writer, c.Theme.BucketName, layout)
 		}
 	}
 

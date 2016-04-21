@@ -5,7 +5,9 @@ import (
 
 	"github.com/labstack/echo"
 	"github.com/labstack/echo/engine/standard"
-	"github.com/labstack/echo/middleware"
+	// "github.com/labstack/echo/engine/fasthttp"
+
+	// "github.com/labstack/echo/middleware"
 	"net/http"
 	"utils"
 )
@@ -24,26 +26,30 @@ var emptyHandler = func(c echo.Context) error {
 	return err
 }
 
+// Echo instance
+var e = echo.New()
+
 func RunServer() {
-	// Echo instance
-	e := echo.New()
 
 	// Middleware
-	e.Use(middleware.Logger())
-	e.Use(middleware.Recover())
+	// e.Use(middleware.Logger())
+	// e.Use(middleware.Recover())
+	// e.Use(middleware.Gzip())
 
-	assetHandler := http.FileServer(rice.MustFindBox("web-static").HTTPBox())
+	// assetHandler := http.FileServer(rice.MustFindBox("web-static").HTTPBox())
 	settingsApp = rice.MustFindBox("settings-app")
 
-	e.Get("/", WebAppEntryPoint())
-	e.Get("/*", WebAppEntryPoint())
-	e.Post("/*", WebAppEntryPoint())
-	e.Get("/favicon.ico", echo.HandlerFunc(emptyHandler))
+	e.Get("/", WebAppEntryPointNew())
+	e.Get("/*", WebAppEntryPointNew())
+	e.Post("/*", WebAppEntryPointNew())
+
+	e.Static("/favicon.ico", "./src/server/web-static/favicon.ico")
+	e.Static("/@settings/static", "./src/server/web-static") // TODO: Вынести в корневой каталог
 
 	gSettings := e.Group("/@settings")
 
 	gSettings.Get("/*", SettingsEntryPoint())
-	gSettings.Get("/static/*", standard.WrapHandler(http.StripPrefix("/@settings/static/", assetHandler)))
+	// gSettings.Get("/static/*", standard.WrapHandler(http.StripPrefix("/@settings/static/", assetHandler)))
 
 	g := gSettings.Group("/api/v1")
 
@@ -68,5 +74,7 @@ func RunServer() {
 	//
 
 	// Start server
+
+	e.Router()
 	e.Run(standard.New(utils.Cfg.Api.Bind))
 }

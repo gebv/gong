@@ -1,13 +1,12 @@
 package widgets
 
 import (
+	"fmt"
+	"store"
 	"strings"
 )
 
-var (
-	AppSettingsBucketName = "settings"
-	AppSettingsFileName   = "app"
-)
+
 
 type appCore struct {
 	ThemeName string `toml:"theme"`
@@ -94,3 +93,60 @@ func (c *Context) GetQueryParam(key string) string {
 func (c *Context) GetFormValue(key string) string {
 	return c.Context.Request().FormValue(key)
 }
+
+func (c *Context) Bind(i interface{}) error {
+	if !c.IsPost() {
+		return fmt.Errorf("only requests with the body")
+	}
+
+	// TODO: type json
+	// c.Context.Bind(i)
+
+	switch i.(type) {
+	case *store.File:
+		return c.bindToFile(i.(*store.File))
+	case map[string]interface{}:
+		return c.bindToMap(i.(map[string]interface{}))
+	case M:
+		return c.bindToMap(i.(M))
+	}
+
+	return fmt.Errorf("not supported type %T", i)
+}
+
+// bindToMap связать тело запроса с map
+func (c *Context) bindToMap(m map[string]interface{}) error {
+	for key, value := range c.Context.Request().FormParams() {
+		if len(value) == 1 {
+			m[key] = value[0]
+		} else {
+			m[key] = value
+		}
+	}
+
+	return nil
+}
+
+// bindToMap связать тело запроса с store.File
+func (c *Context) bindToFile(file *store.File) error {
+	for key, value := range c.Context.Request().FormParams() {
+		if key == "ext_id" {
+			file.SetExtId(value[0])
+			continue
+		}
+
+		if key == "id" {
+			file.Id.SetString(value[0])
+			continue
+		}
+
+		if len(value) == 1 {
+			file.SetOneProps(key, value[0])
+		} else {
+			file.SetOneProps(key, value)
+		}
+	}
+
+	return nil
+}
+

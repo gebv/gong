@@ -354,7 +354,7 @@ var NewFile = {
                     }
                     
                     if (this.Id) {
-                        ItemActions.Delete(store.dispatch, { id: this.Id(), resource_name: this.resource_name });   
+                        ItemActions.Delete(store.dispatch, { id: this.Id(), resource_name: this.resource_name, bucket_id: this.bucket_id});   
                     }
                     
                     return false;

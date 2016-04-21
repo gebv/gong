@@ -193,7 +193,7 @@ var Delete = function(dispatch, config) {
         key: actionTypes.DELETE_ITEM, 
         options: { 
             background: true, 
-            url: ApiUpdateOrDelete({id: config.id, resource_name: config.resource_name}), 
+            url: ApiUpdateOrDelete({id: config.id, resource_name: config.resource_name, bucket_id: config.bucket_id}), 
             method: 'DELETE' 
         }, 
         handler: handler})

@@ -226,17 +226,21 @@ func (f *File) IncludeCollections(v string) bool {
 }
 
 // SetProps set all elements Props
-func (f *File) SetProps(v map[string]interface{}) {
+func (f *File) SetProps(v map[string]interface{}) *File {
 	f.Props = make(map[string]interface{})
 
 	for key, value := range v {
 		f.Props[key] = value
 	}
+
+	return f
 }
 
 // AddProps add element by key
-func (f *File) SetOneProps(k string, v interface{}) {
+func (f *File) SetOneProps(k string, v interface{}) *File {
 	f.Props[k] = v
+
+	return f
 }
 
 // RemoveProps remove element by key
@@ -260,6 +264,67 @@ func (f *File) ExistKeyProps(k string) bool {
 
 func (f *File) GetOneProps(k string) interface{} {
 	return f.Props[k]
+}
+
+func (f *File) GetOnePropsString(k string) string {
+	v, exist := f.Props[k]
+	if !exist {
+		return ""
+	}
+
+	vv, valid := v.(string)
+
+	if !valid {
+		return ""
+	}
+
+	return vv
+}
+
+func (f *File) GetOnePropsArr(k string) []interface{} {
+	v, exist := f.Props[k]
+
+	if !exist {
+		return []interface{}{}
+	}
+
+	vv, valid := v.([]interface{})
+
+	if !valid {
+		return []interface{}{}
+	}
+
+	return vv
+}
+
+func (f *File) GetOnePropsInt(k string) int {
+	v, exist := f.Props[k]
+	if !exist {
+		return 0
+	}
+
+	vv, valid := v.(int)
+
+	if !valid {
+		return 0
+	}
+
+	return vv
+}
+
+func (f *File) GetOnePropsBool(k string) bool {
+	v, exist := f.Props[k]
+	if !exist {
+		return false
+	}
+
+	vv, valid := v.(bool)
+
+	if !valid {
+		return false
+	}
+
+	return vv
 }
 
 // SetTags set all elements Tags

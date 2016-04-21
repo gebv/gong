@@ -5,6 +5,8 @@ import "fmt"
 var (
 	CollNameBucket = "bucket"
 	CollNameFile   = "file"
+
+	BucketSettings = "settings"
 )
 
 //dico errors

@@ -12,7 +12,8 @@
     "mithril": "0.2.3",
     "redux": "3.3.1",
     "lodash": "4.6.1",
-    "brace": "0.7.0"
+    "brace": "0.7.0",
+    "uikit": "2.26.2"
   },
   "devDependencies": {
     "redux-thunk": "2.0.1", 
