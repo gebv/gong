@@ -9,9 +9,13 @@ import "bytes"
 import "io"
 import "github.com/BurntSushi/toml"
 import "github.com/shurcooL/github_flavored_markdown"
+import "github.com/labstack/echo/engine/standard"
 import "strings"
 import "strconv"
 import "net/url"
+import "github.com/gorilla/sessions"
+
+// import "net/http"
 
 // import "net/http"
 
@@ -52,6 +56,41 @@ func NewC(context echo.Context) *C {
 			}
 			return template.HTML(github_flavored_markdown.Markdown([]byte(str)))
 		},
+		"inc": func(i int) int {
+			return i + 1
+		},
+		"get_session": func(key interface{}) interface{} {
+			s, ok := c.Get("session").(*sessions.Session)
+
+			if !ok {
+				glog.Errorf("session is empty")
+				return nil
+			}
+
+			return s.Values[key]
+		},
+		"set_session": func(key, value interface{}) interface{} {
+			s, ok := c.Get("session").(*sessions.Session)
+
+			if !ok {
+				glog.Errorf("session is empty")
+				return nil
+			}
+
+			rq := c.Request().(*standard.Request)
+			rs := c.Response().(*standard.Response)
+
+			s.Values[key] = value
+			if err := s.Save(rq.Request, rs.ResponseWriter); err != nil {
+				glog.Errorf("save session err=%v", err)
+				return nil
+			}
+
+			return value
+		},
+		// "set_session": func(key string, v interface{}) template.HTML {
+		// 	// c.Request().(*standard.Request).Request.Cookie()
+		// },
 		"render": func(args ...interface{}) template.HTML {
 			_c := NewC(c.Context)
 

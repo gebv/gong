@@ -5,6 +5,8 @@ build:
 	GOPATH=${GOPATH}:${PWD} go build -o bin/gong src/main.go
 run: build
 	GOPATH=${GOPATH}:${PWD} go run src/main.go -stderrthreshold=INFO -v=2
+run1: build
+	GOPATH=${GOPATH}:${PWD} go run src/main.go -stderrthreshold=ERROR -v=0
 test: build
 	GOPATH=${GOPATH}:${PWD} go test ./src/store/...
 	

@@ -7,10 +7,14 @@ import (
 	"github.com/labstack/echo/engine/standard"
 	// "github.com/labstack/echo/engine/fasthttp"
 
+	"github.com/gorilla/sessions"
+
 	// "github.com/labstack/echo/middleware"
 	"net/http"
 	"utils"
 )
+
+var CookieStore = sessions.NewCookieStore([]byte(utils.Cfg.Api.CookieStoreKey))
 
 // Handler
 func hello() echo.HandlerFunc {
@@ -34,7 +38,8 @@ func RunServer() {
 	// Middleware
 	// e.Use(middleware.Logger())
 	// e.Use(middleware.Recover())
-	// e.Use(middleware.Gzip())
+	e.Use(SessionMiddleware())
+	e.SetDebug(true)
 
 	// assetHandler := http.FileServer(rice.MustFindBox("web-static").HTTPBox())
 	settingsApp = rice.MustFindBox("settings-app")

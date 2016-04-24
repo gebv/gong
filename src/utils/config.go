@@ -13,10 +13,12 @@ import (
 //name = "DbSearch"
 //type = "string"
 //tag = '''toml:"db_search"'''
+
 //[[fields]]
 //name = "DbStore"
 //type = "string"
 //tag = '''toml:"db_store"'''
+
 //config.toml
 //AUTOGENERATE.DICO>>>
 //	The text in the section 'AUTOGENERATE.DICO' automatically generated, please do not edit it
@@ -60,10 +62,17 @@ func (s *StorageConfig) GetDbStore() string {
 //dico struct
 //config.toml
 // name = "ApiConfig"
+
 //[[fields]]
 //name = "Bind"
 //type = "string"
 //tag = '''toml:"bind"'''
+
+//[[fields]]
+//name = "CookieStoreKey"
+//type = "string"
+//tag = '''toml:"cookie_store_key"'''
+
 //config.toml
 //AUTOGENERATE.DICO>>>
 //	The text in the section 'AUTOGENERATE.DICO' automatically generated, please do not edit it
@@ -78,6 +87,8 @@ func NewApiConfig() *ApiConfig {
 
 type ApiConfig struct {
 	Bind string `toml:"bind"`
+
+	CookieStoreKey string `toml:"cookie_store_key"`
 }
 
 // SetBind set Bind
@@ -88,6 +99,16 @@ func (a *ApiConfig) SetBind(v string) {
 // GetBind get Bind
 func (a *ApiConfig) GetBind() string {
 	return a.Bind
+}
+
+// SetCookieStoreKey set CookieStoreKey
+func (a *ApiConfig) SetCookieStoreKey(v string) {
+	a.CookieStoreKey = v
+}
+
+// GetCookieStoreKey get CookieStoreKey
+func (a *ApiConfig) GetCookieStoreKey() string {
+	return a.CookieStoreKey
 }
 
 //<<<AUTOGENERATE.DICO
@@ -105,6 +126,7 @@ func (a *ApiConfig) GetBind() string {
 //name = "Api"
 //type = "ApiConfig"
 //tag = '''toml:"api"'''
+
 //config.toml
 //AUTOGENERATE.DICO>>>
 //	The text in the section 'AUTOGENERATE.DICO' automatically generated, please do not edit it
